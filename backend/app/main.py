@@ -25,6 +25,11 @@ app.add_middleware(
     allow_headers=["*"],         # Позволяваме всички хедъри
 )
 
+# Register API routers
+from app.api.document import router as document_router
+app.include_router(document_router)
+
+
 @app.get("/health")
 async def health_check():
     """
