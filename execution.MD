@@ -28,7 +28,7 @@
 | Статус | Стъпка  | Описание                            | Технологии                                                                |
 | :----: | :------ | :---------------------------------- | :------------------------------------------------------------------------ |
 |   ✅   | **2.1** | **Dependencies: AI & Parsing**      | `langchain`, `openai`, `google-genai`, `pypdf`                            |
-|   ⬜   | **2.2** | **LangChain: Document Loading**     | `UnstructuredFileLoader`                                                  |
+|   ✅   | **2.2** | **LangChain: Document Loading**     | `PyPDFLoader`                                                             |
 |   ⬜   | **2.3** | **LangChain: Structured Chunking**  | `RecursiveCharacterTextSplitter`                                          |
 |   ⬜   | **2.4** | **Embedding: OpenAI Model Setup**   | `OpenAIEmbeddings`                                                        |
 |   ⬜   | **2.5** | **Storage: `pgvector` Integration** | `LangChain PostgresVectorStore`                                           |
