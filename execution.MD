@@ -10,7 +10,7 @@
 | **[X] 1.1** | **Setup: Project Structure & `venv`** | Създаване на `datumlens-rag` root, `backend/`, `frontend/` директории и активиране на Python `venv`.                                                   |
 | **[X] 1.2** | **Backend Setup: Core Dependencies**  | Инсталиране на `fastapi`, `uvicorn[standard]`, `pydantic`, `python-dotenv` (за по-късно четене на API ключове).                                        |
 | **[X] 1.3** | **Models: RAG Pydantic Schema**       | Дефиниране на `RAGChunkMetadata` и `RAGChunk` в `backend/app/models/rag_model.py`.                                                                     |
-| **[ ] 1.4** | **API: FastAPI "Health Check"**       | Създаване на `backend/app/main.py` с `app = FastAPI()` и прост `/health` endpoint. Тестване на стартирането с `uvicorn`.                               |
+| **[X] 1.4** | **API: FastAPI "Health Check"**       | Създаване на `backend/app/main.py` с `app = FastAPI()` и прост `/health` endpoint. Тестване на стартирането с `uvicorn`.                               |
 | **[ ] 1.5** | **DB: Supabase Project & Extensions** | Създаване на Supabase проект. Атирвиране на **`vector`** extension и `uuid-ossp`.                                                                      |
 | **[ ] 1.6** | **DB: SQL Schema Creation**           | Създаване на таблица `document_chunks` със задължителните колони: `id (UUID)`, `content (text)`, `metadata (jsonb)`, и **`embedding (vector(1536))`**. |
 | **[ ] 1.7** | **DB: FastAPI Supabase Connector**    | Инсталиране на `asyncpg`. Настройка на `backend/app/db/database.py` за асинхронна връзка с PostgreSQL.                                                 |
