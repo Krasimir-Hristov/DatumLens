@@ -108,3 +108,48 @@ def chunk_documents(documents: List[Document]) -> List[Document]:
     
     return chunks
 
+
+def create_embeddings_for_chunks(chunks: List[Document]) -> List[Document]:
+    """
+    Creates embedding vectors for each chunk using OpenAI's model.
+    These embeddings will be stored in the database for similarity search.
+    
+    Args:
+        chunks: List of chunked Documents
+    
+    Returns:
+        Same list of Documents, but now each has an 'embedding' in metadata
+    
+    What is an embedding?
+    An embedding is a list of numbers (vector) that represents the MEANING of text.
+    Similar texts → similar vectors → we can find them with math!
+    
+    Example:
+    "The contract is valid" → [0.2, -0.5, 0.8, ... 1533 more numbers]
+    "The agreement is effective" → [0.19, -0.48, 0.82, ...] ← Very similar!
+    "The sky is blue" → [-0.9, 0.1, 0.3, ...] ← Very different!
+    
+    This is how we'll do semantic search later!
+    """
+    
+    from langchain_openai import OpenAIEmbeddings
+    
+    # Initialize the same embedding model
+    embeddings_model = OpenAIEmbeddings(
+        model="text-embedding-3-small"  # 1536 dimensions
+    )
+    
+    # For each chunk, create its embedding vector
+    for chunk in chunks:
+        # Get the text content
+        text = chunk.page_content
+        
+        # Call OpenAI API to get the embedding
+        # This returns a list of 1536 numbers
+        embedding_vector = embeddings_model.embed_query(text)
+        
+        # Store it in the chunk's metadata
+        chunk.metadata["embedding"] = embedding_vector
+    
+    return chunks
+

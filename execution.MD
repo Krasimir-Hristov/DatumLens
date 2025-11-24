@@ -29,7 +29,7 @@
 | :----: | :------ | :---------------------------------- | :------------------------------------------------------------------------ |
 |   ✅   | **2.1** | **Dependencies: AI & Parsing**      | `langchain`, `openai`, `google-genai`, `pypdf`                            |
 |   ✅   | **2.2** | **LangChain: Document Loading**     | `PyPDFLoader`                                                             |
-|   ⬜   | **2.3** | **LangChain: Structured Chunking**  | `RecursiveCharacterTextSplitter`                                          |
+|   ✅   | **2.3** | **LangChain: Structured Chunking**  | `SemanticChunker` (AI-based)                                              |
 |   ⬜   | **2.4** | **Embedding: OpenAI Model Setup**   | `OpenAIEmbeddings`                                                        |
 |   ⬜   | **2.5** | **Storage: `pgvector` Integration** | `LangChain PostgresVectorStore`                                           |
 |   ⬜   | **2.6** | **API: `/upload` Endpoint**         | `FastAPI UploadFile`, `BackgroundTasks`                                   |
