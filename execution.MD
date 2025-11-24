@@ -13,7 +13,7 @@
 | **[X] 1.4** | **API: FastAPI "Health Check"**       | Създаване на `backend/app/main.py` с `app = FastAPI()` и прост `/health` endpoint. Тестване на стартирането с `uvicorn`.                               |
 | **[X] 1.5** | **DB: Supabase Project & Extensions** | Създаване на Supabase проект. Атирвиране на **`vector`** extension и `uuid-ossp`.                                                                      |
 | **[X] 1.6** | **DB: SQL Schema Creation**           | Създаване на таблица `document_chunks` със задължителните колони: `id (UUID)`, `content (text)`, `metadata (jsonb)`, и **`embedding (vector(1536))`**. |
-| **[ ] 1.7** | **DB: FastAPI Supabase Connector**    | Инсталиране на `asyncpg`. Настройка на `backend/app/db/database.py` за асинхронна връзка с PostgreSQL.                                                 |
+| **[X] 1.7** | **DB: FastAPI Supabase Connector**    | Инсталиране на `supabase`. Настройка на `backend/app/db/supabase.py` за връзка с Supabase.                                                             |
 
 ### Фаза 2: RAG Core: Upload & Indexing
 

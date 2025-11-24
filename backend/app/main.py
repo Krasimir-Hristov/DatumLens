@@ -28,10 +28,29 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """
-    Прост endpoint за проверка на състоянието на сървъра.
-    Връща JSON статус {"status": "ok"}.
+    Проверка на състоянието на сървъра и връзката с базата данни.
     """
-    return {"status": "ok", "message": "DatumLens API is running 🚀"}
+    try:
+        # Опитваме се да вземем версията на базата или просто да направим лека заявка
+        # Тук просто ще проверим дали клиентът е инициализиран успешно
+        from app.db.supabase import get_supabase_client
+        supabase = get_supabase_client()
+        
+        # Правим лека заявка към базата (select count)
+        # Забележка: count връща списък, затова взимаме count свойството
+        response = supabase.table("document_chunks").select("id", count="exact").limit(1).execute()
+        
+        return {
+            "status": "ok", 
+            "message": "DatumLens API & DB are running 🚀",
+            "db_connection": "active"
+        }
+    except Exception as e:
+        return {
+            "status": "error", 
+            "message": f"Database connection failed: {str(e)}",
+            "db_connection": "inactive"
+        }
 
 @app.get("/")
 async def root():
