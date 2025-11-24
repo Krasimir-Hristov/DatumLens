@@ -1,4 +1,4 @@
-from langchain.schema import Document
+from langchain_core.documents import Document
 from typing import List
 from app.db.supabase import get_supabase_client
 import json
