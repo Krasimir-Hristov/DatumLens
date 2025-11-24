@@ -11,27 +11,12 @@
 **Име на Проекта:** **DatumLens RAG** – Specialized AI Document Assistant
 
 **Цел:** SaaS-готов, сигурен уеб-базиран асистент, който позволява на юристи и счетоводители да "разговарят" с техните сложни, вътрешни PDF документи (договори, счетоводни баланси, закони и др.) и незабавно да получават **доказани, цитирани** отговори.
-
-**Ключови Характеристики на Завършения Продукт:**
-
-1.  **Сигурно Качване на Документи:** Потребителите могат да качват собствени PDF файлове, които се съхраняват сигурно и са изолирани от другите потребители.
-2.  **Интелигентно Индексиране:** Системата анализира, структурира и индексира съдържанието, а не просто го разделя, чрез _Structured Document Parsing_.
-3.  **RAG Чат Интерфейс:** Бърз и интуитивен чат интерфейс.
-4.  **Точни Цитати (The Core Feature):** Всеки отговор от AI включва:
-    - Препратки към конкретни секции/параграфи (напр., "Член 4, Параграф 2").
-    - Линк, който, при клик, **автоматично маркира (хайлайтва)** източника на отговора в оригиналния PDF (използвайки `start_offset` метаданните).
-
----
-
-### Технологичен Стек (The "How")
-
-| Категория                     | Технологичен Стек                                                   |
 | :---------------------------- | :------------------------------------------------------------------ |
-| **Backend/AI Core**           | Python, FastAPI, LangChain/LangGraph, OpenAI Embeddings, Gemini LLM |
-| **Database/Vector DB**        | Supabase (PostgreSQL + `pgvector`)                                  |
-| **Frontend/UX**               | Next.js, TypeScript, TailwindCSS, Shadcn/UI                         |
-| **Frontend State**            | TanStack Query (Server State), Zustand (Client UI State)            |
-| **Ключово Предизвикателство** | Хибридно Търсене и Точни Цитати                                     |
+| **Backend/AI Core** | Python, FastAPI, LangChain/LangGraph, OpenAI Embeddings, Gemini LLM |
+| **Database/Vector DB** | Supabase (PostgreSQL + `pgvector`) |
+| **Frontend/UX** | Next.js, TypeScript, TailwindCSS, Shadcn/UI |
+| **Frontend State** | TanStack Query (Server State), Zustand (Client UI State) |
+| **Ключово Предизвикателство** | Хибридно Търсене и Точни Цитати |
 
 ### Фази на Разработка (The "Steps")
 
