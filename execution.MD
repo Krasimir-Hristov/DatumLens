@@ -1,6 +1,6 @@
 # 🚀 DatumLens RAG: Execution Plan
 
-**Current Phase:** `Phase 2: RAG Core`
+**Current Phase:** `Phase 3: RAG Core`
 **Status:** 🏗️ In Progress
 
 ---
@@ -21,7 +21,7 @@
 
 ---
 
-## 🏗️ Фаза 2: RAG Core: Upload & Indexing
+## ✅ Фаза 2: RAG Core: Upload & Indexing
 
 **Цел:** Изграждане на пайплайн за интелигентна обработка на PDF и съхранение в `pgvector`.
 
@@ -46,7 +46,7 @@
 |   ✅   | **3.1** | **Search: Keyword Retriever (FTS)**     | `PostgreSQL FTS` ('simple' config)                            |
 |   ✅   | **3.2** | **Search: Vector Retriever**            | `pgvector`, `cosine similarity`                               |
 |   ✅   | **3.3** | **Search: Hybrid Search Orchestration** | `Custom scoring algorithm`, `deduplication`                   |
-|   ⬜   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, `LangChain`                                  |
+|   ✅   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, `LangChain`                                  |
 |   ⬜   | **3.5** | **Prompt Engineering: Citation Focus**  | `System Prompts` (вкл. инструкции за Multi-language отговори) |
 |   ⬜   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, `LCEL`                                           |
 |   ⬜   | **3.7** | **API: `/chat` Endpoint**               | `FastAPI`, `StreamingResponse`                                |
@@ -79,4 +79,5 @@
 |   ⬜   | **5.4** | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                 |
 |   ⬜   | **5.5** | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                   |
 |   ⬜   | **5.6** | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace). |
-|   ⬜   | **5.7** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                     |
+|   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.     |
+|   ⬜   | **5.8** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                     |
