@@ -1,65 +1,82 @@
+"""
+DatumLens RAG API - Main application entry point.
+
+This module initializes the FastAPI application, configures CORS,
+and registers all API routers.
+"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Създаваме инстанция на FastAPI приложението
-# title и version се показват в автоматичната документация (Swagger UI)
+from app.api.document import router as document_router
+from app.db.supabase import get_supabase_client
+
+# Create FastAPI application instance
 app = FastAPI(
     title="DatumLens RAG API",
     version="1.0.0",
-    description="API за интелигентен анализ на документи с RAG"
+    description="API за интелигентен анализ на документи с RAG",
 )
 
-# Настройка на CORS (Cross-Origin Resource Sharing)
-# Това е важно, защото Frontend-ът (Next.js) ще върви на друг порт (напр. 3000),
-# а Backend-ът на 8000. Браузърът блокира такива заявки по подразбиране, освен ако не ги разрешим тук.
+# CORS configuration for cross-origin requests
+# This allows the frontend (Next.js on port 3000) to communicate
+# with the backend (FastAPI on port 8000)
 origins = [
-    "http://localhost:3000", # Next.js локално
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # Кой има право да ни вика
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],         # Позволяваме всички методи (GET, POST, PUT, DELETE)
-    allow_headers=["*"],         # Позволяваме всички хедъри
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Register API routers
-from app.api.document import router as document_router
 app.include_router(document_router)
 
 
 @app.get("/health")
 async def health_check():
     """
-    Проверка на състоянието на сървъра и връзката с базата данни.
+    Health check endpoint - verifies API and database connectivity.
+
+    Returns:
+        dict: Status information including database connection state
     """
     try:
-        # Опитваме се да вземем версията на базата или просто да направим лека заявка
-        # Тук просто ще проверим дали клиентът е инициализиран успешно
-        from app.db.supabase import get_supabase_client
         supabase = get_supabase_client()
-        
-        # Правим лека заявка към базата (select count)
-        # Забележка: count връща списък, затова взимаме count свойството
-        response = supabase.table("document_chunks").select("id", count="exact").limit(1).execute()
-        
+
+        # Perform lightweight database query to verify connection
+        _ = (
+            supabase.table("document_chunks")
+            .select("id", count="exact")
+            .limit(1)
+            .execute()
+        )
+
         return {
-            "status": "ok", 
+            "status": "ok",
             "message": "DatumLens API & DB are running 🚀",
-            "db_connection": "active"
+            "db_connection": "active",
         }
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
+        # Broad exception is intentional here for health checks
         return {
-            "status": "error", 
+            "status": "error",
             "message": f"Database connection failed: {str(e)}",
-            "db_connection": "inactive"
+            "db_connection": "inactive",
         }
+
 
 @app.get("/")
 async def root():
     """
-    Root endpoint - просто за да не виждаме 404, когато отворим главния URL.
+    Root endpoint - provides API information.
+
+    Returns:
+        dict: Welcome message with link to API documentation
     """
     return {"message": "Welcome to DatumLens API. Visit /docs for Swagger UI."}
