@@ -44,8 +44,8 @@
 | Статус | Стъпка  | Описание                                | Технологии                                                    |
 | :----: | :------ | :-------------------------------------- | :------------------------------------------------------------ |
 |   ✅   | **3.1** | **Search: Keyword Retriever (FTS)**     | `PostgreSQL FTS` ('simple' config)                            |
-|   ⬜   | **3.2** | **Search: Vector Retriever**            | `Vector Similarity Search`                                    |
-|   ⬜   | **3.3** | **Search: Hybrid Search Orchestration** | `EnsembleRetriever`                                           |
+|   ✅   | **3.2** | **Search: Vector Retriever**            | `pgvector`, `cosine similarity`                               |
+|   ✅   | **3.3** | **Search: Hybrid Search Orchestration** | `Custom scoring algorithm`, `deduplication`                   |
 |   ⬜   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, `LangChain`                                  |
 |   ⬜   | **3.5** | **Prompt Engineering: Citation Focus**  | `System Prompts` (вкл. инструкции за Multi-language отговори) |
 |   ⬜   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, `LCEL`                                           |
