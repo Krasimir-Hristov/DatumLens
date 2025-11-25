@@ -41,3 +41,10 @@ create policy "Allow public insert access"
   for insert
   to public
   with check (true);
+
+-- 7. Full-Text Search Index (Added: 2025-11-25)
+-- This enables fast searching by keywords (like Google search)
+create index if not exists document_chunks_content_fts_idx 
+on document_chunks 
+using gin(to_tsvector('english', content));
+
