@@ -48,3 +48,33 @@ create index if not exists document_chunks_content_fts_idx
 on document_chunks 
 using gin(to_tsvector('simple', content));
 
+-- 8. Vector Similarity Search Function (Added: 2025-11-25)
+-- This function compares a query embedding with all stored embeddings
+-- and returns the most similar chunks
+create or replace function match_documents (
+  query_embedding vector(1536),
+  match_count int default 5
+)
+returns table (
+  id uuid,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    document_chunks.id,
+    document_chunks.content,
+    document_chunks.metadata,
+    1 - (document_chunks.embedding <=> query_embedding) as similarity
+  from document_chunks
+  where document_chunks.embedding is not null
+  order by document_chunks.embedding <=> query_embedding
+  limit match_count;
+end;
+$$;
+
+
