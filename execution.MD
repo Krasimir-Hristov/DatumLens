@@ -46,9 +46,9 @@
 |   ✅   | **3.1** | **Search: Keyword Retriever (FTS)**     | `PostgreSQL FTS` ('simple' config)                            |
 |   ✅   | **3.2** | **Search: Vector Retriever**            | `pgvector`, `cosine similarity`                               |
 |   ✅   | **3.3** | **Search: Hybrid Search Orchestration** | `Custom scoring algorithm`, `deduplication`                   |
-|   ✅   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, `LangChain`                                  |
-|   ⬜   | **3.5** | **Prompt Engineering: Citation Focus**  | `System Prompts` (вкл. инструкции за Multi-language отговори) |
-|   ⬜   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, `LCEL`                                           |
+|   ✅   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, Environment-based config                     |
+|   ✅   | **3.5** | **Prompt Engineering: Citation Focus**  | `System Prompts` (вкл. инструкции за Multi-language отговори) |
+|   ⬜   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, In-memory conversation history                   |
 |   ⬜   | **3.7** | **API: `/chat` Endpoint**               | `FastAPI`, `StreamingResponse`                                |
 
 ---
@@ -80,4 +80,5 @@
 |   ⬜   | **5.5** | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                   |
 |   ⬜   | **5.6** | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace). |
 |   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.     |
-|   ⬜   | **5.8** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                     |
+|   ⬜   | **5.8** | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).       |
+|   ⬜   | **5.9** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                     |
