@@ -1,3 +1,11 @@
+"""
+Search module for DatumLens RAG.
+
+This module provides hybrid search functionality combining:
+- Full-Text Search (keyword matching)
+- Vector Similarity Search (semantic understanding)
+"""
+
 from typing import List, Dict, Any
 
 from langchain_openai import OpenAIEmbeddings
@@ -17,20 +25,40 @@ def search_by_keyword(query: str, limit: int = 5) -> List[Dict[str, Any]]:
         List of matching chunks with their metadata
 
     How it works:
-    Uses PostgreSQL's built-in Full-Text Search with the 'simple' configuration.
-    This matches exact words regardless of language.
+    Uses PostgreSQL's built-in Full-Text Search.
+    The FTS index we created uses 'simple' configuration by default.
     """
     supabase = get_supabase_client()
 
-    response = (
-        supabase.table("document_chunks")
-        .select("id, content, metadata, created_at")
-        .text_search("content", query, config="simple")
-        .limit(limit)
-        .execute()
-    )
+    # Use websearch_to_tsquery (type="websearch") to handle natural language queries
+    # This avoids syntax errors with spaces/special chars
+    # Also slice results in Python to avoid builder issues
+    try:
+        response = (
+            supabase.table("document_chunks")
+            .select("id, content, metadata, created_at")
+            .text_search("content", query, type="websearch")
+            .execute()
+        )
 
-    return response.data
+        return response.data[:limit]
+    except Exception:
+        # Fallback: Manual formatting if type="websearch" is not supported
+        # "word1 word2" -> "word1 & word2"
+        safe_query = "".join(c for c in query if c.isalnum() or c.isspace())
+        formatted_query = " & ".join(safe_query.split())
+
+        if not formatted_query:
+            return []
+
+        response = (
+            supabase.table("document_chunks")
+            .select("id, content, metadata, created_at")
+            .text_search("content", formatted_query)
+            .execute()
+        )
+
+        return response.data[:limit]
 
 
 def search_by_vector(query: str, limit: int = 5) -> List[Dict[str, Any]]:
@@ -84,7 +112,7 @@ def hybrid_search(
 
     Raises:
         ValueError: If weights don't sum to 1.0
-        Exception: If both search methods fail
+        RuntimeError: If both search methods fail
 
     Example:
         >>> results = hybrid_search("What are the penalties?")
@@ -112,7 +140,8 @@ def hybrid_search(
         return combined_results[:top_k]
 
     except Exception as e:
-        raise Exception(f"Hybrid search failed: {str(e)}") from e
+        # Re-raise with more specific context
+        raise RuntimeError(f"Hybrid search failed: {str(e)}") from e
 
 
 def _merge_search_results(

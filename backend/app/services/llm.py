@@ -5,7 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.language_models.chat_models import BaseChatModel
 
 # Default constants (fallbacks)
-DEFAULT_MODEL_NAME = "gemini-1.5-flash"
+DEFAULT_MODEL_NAME = "gemini-2.5-flash-lite"
 DEFAULT_TEMPERATURE = 0.1
 DEFAULT_TOP_P = 0.9
 
@@ -69,6 +69,7 @@ def get_llm_model(
         top_p=final_top_p,
         google_api_key=api_key,
         max_retries=2,
+        convert_system_message_to_human=True,  # Fix for some Gemini versions
     )
 
     return llm
