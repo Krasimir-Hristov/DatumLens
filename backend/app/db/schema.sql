@@ -46,5 +46,5 @@ create policy "Allow public insert access"
 -- This enables fast searching by keywords (like Google search)
 create index if not exists document_chunks_content_fts_idx 
 on document_chunks 
-using gin(to_tsvector('english', content));
+using gin(to_tsvector('simple', content));
 
