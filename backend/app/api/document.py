@@ -104,3 +104,26 @@ async def delete_document(filename: str):
         raise HTTPException(
             status_code=500, detail=f"Error deleting document: {str(e)}"
         )
+
+
+@router.get("/list")
+async def list_documents():
+    """
+    List all document chunks in the database.
+    Useful for debugging and viewing what documents are stored.
+
+    Returns:
+        Dictionary with total count and list of chunks with their metadata
+    """
+    from app.db.supabase import get_supabase_client
+
+    try:
+        supabase = get_supabase_client()
+        response = supabase.table("document_chunks").select("id, metadata").execute()
+
+        return {"total_chunks": len(response.data), "chunks": response.data}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error listing documents: {str(e)}"
+        )
