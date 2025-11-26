@@ -71,14 +71,16 @@
 
 **Цел:** Внедряване на ключовата функция за хайлайтване на цитати и добавяне на SaaS-готовност.
 
-| Статус | Стъпка  | Описание                             | Технологии                                                      |
-| :----: | :------ | :----------------------------------- | :-------------------------------------------------------------- |
-|   ⬜   | **5.1** | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                                  |
-|   ⬜   | **5.2** | **Citation: PDF Viewer Integration** | `react-pdf`                                                     |
-|   ⬜   | **5.3** | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                       |
-|   ⬜   | **5.4** | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                 |
-|   ⬜   | **5.5** | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                   |
-|   ⬜   | **5.6** | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace). |
-|   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.     |
-|   ⬜   | **5.8** | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).       |
-|   ⬜   | **5.9** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                     |
+| Статус | Стъпка   | Описание                             | Технологии                                                        |
+| :----: | :------- | :----------------------------------- | :---------------------------------------------------------------- |
+|   ⬜   | **5.1**  | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                                    |
+|   ⬜   | **5.2**  | **Citation: PDF Viewer Integration** | `react-pdf`                                                       |
+|   ⬜   | **5.3**  | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                         |
+|   ⬜   | **5.4**  | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                   |
+|   ⬜   | **5.5**  | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                     |
+|   ⬜   | **5.6**  | **Document Registry: Files Table**   | Таблица `documents` за списък с файлове + Supabase Storage bucket |
+|   ⬜   | **5.7**  | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace).   |
+|   ⬜   | **5.8**  | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.       |
+|   ⬜   | **5.9**  | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).         |
+|   ⬜   | **5.10** | **Feature: OCR Support**             | Tesseract OCR за scan-нати PDF файлове без text layer.            |
+|   ⬜   | **5.11** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                       |
