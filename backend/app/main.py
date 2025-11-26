@@ -12,6 +12,9 @@ from app.api.document import router as document_router
 from app.api.chat import router as chat_router
 from app.db.supabase import get_supabase_client
 
+import logging
+
+
 # Create FastAPI application instance
 app = FastAPI(
     title="DatumLens RAG API",
@@ -19,12 +22,18 @@ app = FastAPI(
     description="API за интелигентен анализ на документи с RAG",
 )
 
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # CORS configuration for cross-origin requests
 # This allows the frontend (Next.js on port 3000) to communicate
 # with the backend (FastAPI on port 8000)
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "*",  # Allow all for development debugging
 ]
 
 app.add_middleware(

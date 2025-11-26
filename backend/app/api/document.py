@@ -8,6 +8,8 @@ from app.services.document_processor import (
 from app.services.storage import save_chunks_to_database, delete_document_by_filename
 
 # Create a router for document-related endpoints
+import logging
+
 # This keeps our code organized (all document routes in one place)
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -35,11 +37,17 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     try:
+
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting upload for file: {file.filename}")
+
         # Step 2: Read the uploaded file into memory
         file_bytes = await file.read()
+        logger.info(f"File read successfully. Size: {len(file_bytes)} bytes")
 
         # Step 3: Load PDF and extract text from pages
         documents = await load_pdf_from_bytes(file_bytes, file.filename)
+        logger.info(f"PDF loaded. Pages: {len(documents)}")
 
         if not documents or len(documents) == 0:
             raise HTTPException(
