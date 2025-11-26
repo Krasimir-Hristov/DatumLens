@@ -59,9 +59,9 @@
 
 | Статус | Стъпка  | Описание                         | Технологии                             |
 | :----: | :------ | :------------------------------- | :------------------------------------- |
-|   ⬜   | **4.1** | **Frontend Setup: Next.js & TS** | `Next.js`, `TypeScript`, `TailwindCSS` |
-|   ⬜   | **4.2** | **State: TanStack Query Setup**  | `TanStack Query` (Server State)        |
-|   ⬜   | **4.3** | **State: Zustand Setup**         | `Zustand` (Client UI State)            |
+|   ✅   | **4.1** | **Frontend Setup: Next.js & TS** | `Next.js 16`, `React 19`, `Tailwind 4` |
+|   ✅   | **4.2** | **State: TanStack Query Setup**  | `TanStack Query` (Server State)        |
+|   ✅   | **4.3** | **State: Zustand Setup**         | `Zustand` (Client UI State)            |
 |   ⬜   | **4.4** | **UX: Upload Component**         | `Drag-n-Drop`, `Mutations`             |
 |   ⬜   | **4.5** | **UX: Chat Interface**           | `Chat UI`, `Optimistic Updates`        |
 
