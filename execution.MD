@@ -1,7 +1,7 @@
 # 🚀 DatumLens RAG: Execution Plan
 
-**Current Phase:** `Phase 3: RAG Core`
-**Status:** 🏗️ In Progress
+**Current Phase:** `Phase 4: Frontend (Next.js) & State`
+**Status:** � Ready to Start
 
 ---
 
@@ -37,7 +37,7 @@
 
 ---
 
-## 🔮 Фаза 3: RAG Core: Chat & Retrieval
+## ✅ Фаза 3: RAG Core: Chat & Retrieval
 
 **Цел:** Имплементиране на Хибридно Търсене и RAG веригата с Gemini за генериране на цитиран отговор.
 
@@ -48,8 +48,8 @@
 |   ✅   | **3.3** | **Search: Hybrid Search Orchestration** | `Custom scoring algorithm`, `deduplication`                   |
 |   ✅   | **3.4** | **LLM: Gemini Setup**                   | `Google Gemini`, Environment-based config                     |
 |   ✅   | **3.5** | **Prompt Engineering: Citation Focus**  | `System Prompts` (вкл. инструкции за Multi-language отговори) |
-|   ⬜   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, In-memory conversation history                   |
-|   ⬜   | **3.7** | **API: `/chat` Endpoint**               | `FastAPI`, `StreamingResponse`                                |
+|   ✅   | **3.6** | **RAG Chain: Final Orchestration**      | `LangChain`, In-memory conversation history                   |
+|   ✅   | **3.7** | **API: `/chat` Endpoint**               | `FastAPI`, `StreamingResponse`                                |
 
 ---
 
