@@ -1,21 +1,29 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { User, Bot, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import {
+  parseTextWithCitations,
+  extractCitations,
+  type Citation,
+  type ParsedPart,
+} from '@/lib/citation-parser';
+import { CitationBadge, CitationList } from './citation-badge';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
   sources?: number;
+  onCitationClick?: (citation: Citation) => void;
 }
 
 export const ChatMessage = memo(function ChatMessage({
   role,
   content,
   sources,
+  onCitationClick,
 }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
 
@@ -25,7 +33,27 @@ export const ChatMessage = memo(function ChatMessage({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleCitationClick = useCallback(
+    (citation: Citation) => {
+      if (onCitationClick) {
+        onCitationClick(citation);
+      } else {
+        // Default: Log to console (will open PDF viewer in Phase 5.2)
+        console.log(
+          '📄 Opening citation:',
+          citation.filename,
+          'Page:',
+          citation.page
+        );
+      }
+    },
+    [onCitationClick]
+  );
+
   const isUser = role === 'user';
+
+  // Extract all citations for the summary at the bottom
+  const allCitations = !isUser ? extractCitations(content) : [];
 
   return (
     <div
@@ -67,39 +95,31 @@ export const ChatMessage = memo(function ChatMessage({
           <div className='prose prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-slate-900 prose-pre:text-slate-100'>
             <ReactMarkdown
               components={{
-                // Custom rendering for citations
+                // Custom rendering for citations in paragraphs
                 p: ({ children }) => {
                   const text = String(children);
-                  // Match [Source: filename.pdf, Page X] pattern
-                  const citationRegex = /\[Source: ([^,]+), Page (\d+)\]/g;
+                  const parts = parseTextWithCitations(text);
 
-                  if (citationRegex.test(text)) {
-                    const parts = text.split(/(\[Source: [^,]+, Page \d+\])/g);
+                  // Check if we have any citations
+                  const hasCitationParts = parts.some(
+                    (p: ParsedPart) => p.type === 'citation'
+                  );
+
+                  if (hasCitationParts) {
                     return (
                       <p>
                         {parts.map((part, i) => {
-                          const match = part.match(
-                            /\[Source: ([^,]+), Page (\d+)\]/
-                          );
-                          if (match) {
+                          if (part.type === 'citation') {
                             return (
-                              <button
+                              <CitationBadge
                                 key={i}
-                                className='inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20 dark:hover:bg-blue-900/50 transition-colors'
-                                onClick={() => {
-                                  // TODO: Open PDF viewer in Phase 5
-                                  console.log(
-                                    'Citation clicked:',
-                                    match[1],
-                                    match[2]
-                                  );
-                                }}
-                              >
-                                📄 {match[1]} (p.{match[2]})
-                              </button>
+                                citation={part.citation}
+                                onClick={handleCitationClick}
+                                variant='default'
+                              />
                             );
                           }
-                          return part;
+                          return <span key={i}>{part.content}</span>;
                         })}
                       </p>
                     );
@@ -110,11 +130,17 @@ export const ChatMessage = memo(function ChatMessage({
             >
               {content}
             </ReactMarkdown>
+
+            {/* Citation summary at the bottom */}
+            <CitationList
+              citations={allCitations}
+              onCitationClick={handleCitationClick}
+            />
           </div>
         )}
       </div>
 
-      {/* Copy Button (pouze za AI otgovori) */}
+      {/* Copy Button (only for AI responses) */}
       {!isUser && (
         <button
           onClick={handleCopy}

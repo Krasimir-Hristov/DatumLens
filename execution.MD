@@ -73,7 +73,7 @@
 
 | Статус | Стъпка   | Описание                             | Технологии                                                        |
 | :----: | :------- | :----------------------------------- | :---------------------------------------------------------------- |
-|   ⬜   | **5.1**  | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                                    |
+|   ✅   | **5.1**  | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                                    |
 |   ⬜   | **5.2**  | **Citation: PDF Viewer Integration** | `react-pdf`                                                       |
 |   ⬜   | **5.3**  | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                         |
 |   ⬜   | **5.4**  | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                   |
