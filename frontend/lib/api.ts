@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/client';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 // Document interface matching backend response
@@ -36,6 +38,27 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json();
 }
 
+// Authenticated Fetch Wrapper
+async function authFetch(url: string, options: RequestInit = {}) {
+  const supabase = createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const headers = new Headers(options.headers);
+
+  if (session?.access_token) {
+    headers.set('Authorization', `Bearer ${session.access_token}`);
+  }
+
+  const config = {
+    ...options,
+    headers,
+  };
+
+  return fetch(url, config);
+}
+
 export const api = {
   // Document endpoints
   uploadDocument: async (file: File) => {
@@ -44,10 +67,24 @@ export const api = {
     formData.append('file', file);
 
     try {
+      // Note: FormData handling needs special care, authFetch handles headers but we
+      // shouldn't set Content-Type manually for FormData, fetch does it.
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: Record<string, string> = {};
+
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/documents/upload`, {
         method: 'POST',
+        headers,
         body: formData,
       });
+
       console.log('API: Response status', response.status);
       return handleResponse<{
         success: boolean;
@@ -62,14 +99,17 @@ export const api = {
   },
 
   listDocuments: async () => {
-    const response = await fetch(`${API_BASE_URL}/documents/list`);
+    const response = await authFetch(`${API_BASE_URL}/documents/list`);
     return handleResponse<DocumentListResponse>(response);
   },
 
   deleteDocumentById: async (documentId: string) => {
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
-      method: 'DELETE',
-    });
+    const response = await authFetch(
+      `${API_BASE_URL}/documents/${documentId}`,
+      {
+        method: 'DELETE',
+      }
+    );
     return handleResponse<{
       success: boolean;
       document_id: string;
@@ -80,7 +120,9 @@ export const api = {
   },
 
   getDocumentUrl: async (documentId: string) => {
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/url`);
+    const response = await authFetch(
+      `${API_BASE_URL}/documents/${documentId}/url`
+    );
     return handleResponse<{
       success: boolean;
       document_id: string;
@@ -91,7 +133,7 @@ export const api = {
 
   // Legacy: delete by filename (for backward compatibility)
   deleteDocument: async (filename: string) => {
-    const response = await fetch(
+    const response = await authFetch(
       `${API_BASE_URL}/documents/by-name/${filename}`,
       {
         method: 'DELETE',
@@ -104,11 +146,11 @@ export const api = {
   },
 
   // Chat endpoints
-  askQuestion: async (question: string, userId: string = 'default_user') => {
-    const response = await fetch(`${API_BASE_URL}/chat/ask`, {
+  askQuestion: async (question: string) => {
+    const response = await authFetch(`${API_BASE_URL}/chat/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question, user_id: userId }),
+      body: JSON.stringify({ question }),
     });
     return handleResponse<{
       answer: string;
@@ -117,15 +159,20 @@ export const api = {
     }>(response);
   },
 
-  clearConversation: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/chat/clear/${userId}`, {
+  clearConversation: async () => {
+    // With Auth, we don't need to pass userId in the URL usually,
+    // but the backend endpoint might still expect it.
+    // For now, let's assume the backend will read userId from token later.
+    // If backend requires ID in URL, we might need a workaround until backend is updated.
+    // We'll update the backend to clear 'me' instead of ID.
+    const response = await authFetch(`${API_BASE_URL}/chat/clear`, {
       method: 'DELETE',
     });
     return handleResponse<{ message: string }>(response);
   },
 
   getStats: async () => {
-    const response = await fetch(`${API_BASE_URL}/chat/stats`);
+    const response = await authFetch(`${API_BASE_URL}/chat/stats`);
     return handleResponse<any>(response);
   },
 };

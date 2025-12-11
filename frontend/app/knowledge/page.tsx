@@ -1,11 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Database, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import {
+  ArrowLeft,
+  MessageSquare,
+  Database,
+  Sparkles,
+  LogOut,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UploadZone, DocumentList } from '@/components/knowledge';
+import { toast } from 'sonner';
 
 export default function KnowledgePage() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Error signing out');
+      return;
+    }
+    router.push('/login');
+    router.refresh();
+  };
+
   return (
     <main className='relative min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950'>
       {/* Background Blobs */}
@@ -36,12 +58,18 @@ export default function KnowledgePage() {
                 </span>
               </div>
             </div>
-            <Link href='/chat'>
-              <Button size='sm'>
-                <MessageSquare className='h-4 w-4 mr-2' />
-                Chat
+            <div className='flex items-center gap-2'>
+              <Link href='/chat'>
+                <Button size='sm' variant='outline'>
+                  <MessageSquare className='h-4 w-4 mr-2' />
+                  Chat
+                </Button>
+              </Link>
+              <Button size='sm' variant='ghost' onClick={handleLogout}>
+                <LogOut className='h-4 w-4 mr-2' />
+                Sign out
               </Button>
-            </Link>
+            </div>
           </div>
         </div>
       </nav>

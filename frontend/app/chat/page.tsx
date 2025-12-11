@@ -1,9 +1,27 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { ArrowLeft, Upload, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatInterface } from '@/components/chat';
+import { toast } from 'sonner';
 
 export default function ChatPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Error signing out');
+      return;
+    }
+    router.push('/login');
+    router.refresh();
+  };
+
   return (
     <main className='flex flex-col h-screen bg-slate-50 dark:bg-slate-950'>
       {/* Navigation */}
@@ -23,12 +41,18 @@ export default function ChatPage() {
                 DatumLens Chat
               </span>
             </div>
-            <Link href='/knowledge'>
-              <Button variant='outline' size='sm'>
-                <Upload className='h-4 w-4 mr-2' />
-                Upload More
+            <div className='flex items-center gap-2'>
+              <Link href='/knowledge'>
+                <Button variant='outline' size='sm'>
+                  <Upload className='h-4 w-4 mr-2' />
+                  Manage Knowledge
+                </Button>
+              </Link>
+              <Button size='sm' variant='ghost' onClick={handleLogout}>
+                <LogOut className='h-4 w-4 mr-2' />
+                Sign out
               </Button>
-            </Link>
+            </div>
           </div>
         </div>
       </nav>
