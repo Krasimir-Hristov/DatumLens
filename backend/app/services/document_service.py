@@ -138,14 +138,23 @@ def list_documents(
     return response.data or []
 
 
-def get_all_doc_names() -> List[str]:
+def get_all_doc_names(access_token: Optional[str] = None) -> List[str]:
     """
     Retrieves a list of all document filenames.
+
+    Args:
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         List of strings (filenames)
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     response = (
         supabase.table("documents").select("filename").order("filename").execute()

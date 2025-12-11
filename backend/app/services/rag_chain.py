@@ -65,7 +65,7 @@ def ask_question(
     system_prompt = get_system_prompt()
 
     # Get all available filenames to give LLM full awareness of the library
-    available_docs = get_all_doc_names()
+    available_docs = get_all_doc_names(access_token)
     user_prompt = _build_user_prompt(question, context, available_docs)
 
     # Step 4: Build messages with conversation history
