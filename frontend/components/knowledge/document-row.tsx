@@ -102,7 +102,7 @@ export function DocumentRow({ document }: DocumentRowProps) {
         {/* Icon */}
         <div
           className={cn(
-            'flex-shrink-0 p-3 rounded-lg transition-colors',
+            'shrink-0 p-3 rounded-lg transition-colors',
             isHovered
               ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
