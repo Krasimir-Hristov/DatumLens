@@ -26,11 +26,15 @@ MAX_RETRIEVED_CHUNKS = int(os.getenv("MAX_RETRIEVED_CHUNKS", "5"))
 active_conversations: Dict[str, List[Dict[str, str]]] = {}
 
 
+from typing import Annotated
+from fastapi import Depends
+from app.api.deps import CurrentUser, get_current_user_with_token
+
+
 class ChatRequest(BaseModel):
     """Request model for chat endpoint."""
 
     question: str
-    user_id: str = "default_user"  # Will be from auth in Phase 5
 
 
 class ChatResponse(BaseModel):
@@ -42,54 +46,30 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/ask", response_model=ChatResponse)
-async def chat_with_documents(request: ChatRequest):
+async def chat_with_documents(
+    request: ChatRequest,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
     Main chat endpoint - answers questions with conversation context.
-
-    This endpoint:
-    1. Retrieves conversation history for the user
-    2. Limits history to MAX_CONVERSATION_HISTORY (cost optimization)
-    3. Calls RAG chain with history
-    4. Saves the new messages to history
-    5. Returns the answer
-
-    Args:
-        request: ChatRequest with question and user_id
-
-    Returns:
-        ChatResponse with answer and metadata
-
-    Raises:
-        HTTPException: If question is empty or error occurs
-
-    Example:
-        POST /chat/ask
-        {
-            "question": "What are the payment terms?",
-            "user_id": "user_123"
-        }
-
-        Response:
-        {
-            "answer": "Payment terms are 30 days [Source: contract.pdf, Page 3]",
-            "sources_used": 5,
-            "conversation_length": 2
-        }
+    Protected by Supabase Auth (JWT).
     """
+    current_user, access_token = user_with_token
+
     # Validation
     if not request.question or not request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     try:
-        # Get or create conversation history for this user
-        user_id = request.user_id
+        # Get user ID from authenticated token
+        user_id = current_user.id
+
         if user_id not in active_conversations:
             active_conversations[user_id] = []
 
         history = active_conversations[user_id]
 
         # Trim history to last N exchanges (cost optimization)
-        # Each exchange = 1 user message + 1 assistant message = 2 items
         max_messages = MAX_CONVERSATION_HISTORY * 2
         if len(history) > max_messages:
             history = history[-max_messages:]
@@ -100,6 +80,7 @@ async def chat_with_documents(request: ChatRequest):
             question=request.question,
             conversation_history=history,
             top_k=MAX_RETRIEVED_CHUNKS,
+            access_token=access_token,
         )
 
         # Update conversation history
@@ -110,7 +91,7 @@ async def chat_with_documents(request: ChatRequest):
         return ChatResponse(
             answer=answer,
             sources_used=MAX_RETRIEVED_CHUNKS,
-            conversation_length=len(history) // 2,  # Number of exchanges
+            conversation_length=len(history) // 2,
         )
 
     except Exception as e:
@@ -119,27 +100,18 @@ async def chat_with_documents(request: ChatRequest):
         ) from e
 
 
-@router.delete("/clear/{user_id}")
-async def clear_conversation(user_id: str):
+@router.delete("/clear")
+async def clear_conversation(current_user: CurrentUser):
     """
-    Clears conversation history for a user.
-
-    Useful for:
-    - Starting a fresh conversation
-    - Freeing up memory
-    - User privacy
-
-    Args:
-        user_id: ID of the user whose history to clear
-
-    Returns:
-        Success message
+    Clears conversation history for the authenticated user.
     """
+    user_id = current_user.id
+
     if user_id in active_conversations:
         del active_conversations[user_id]
-        return {"message": f"Conversation cleared for user {user_id}"}
+        return {"message": "Conversation history cleared"}
 
-    return {"message": f"No conversation found for user {user_id}"}
+    return {"message": "No conversation found"}
 
 
 @router.get("/stats")

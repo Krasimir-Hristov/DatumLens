@@ -13,13 +13,16 @@ from langchain_openai import OpenAIEmbeddings
 from app.db.supabase import get_supabase_client
 
 
-def search_by_keyword(query: str, limit: int = 5) -> List[Dict[str, Any]]:
+def search_by_keyword(
+    query: str, limit: int = 5, access_token: str = None
+) -> List[Dict[str, Any]]:
     """
     Performs a Full-Text Search (Keyword Search) on document chunks.
 
     Args:
         query: The search keywords (e.g. "неустойки")
         limit: Max number of results to return
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         List of matching chunks with their metadata
@@ -28,7 +31,13 @@ def search_by_keyword(query: str, limit: int = 5) -> List[Dict[str, Any]]:
     Uses PostgreSQL's built-in Full-Text Search.
     The FTS index we created uses 'simple' configuration by default.
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     # Use websearch_to_tsquery (type="websearch") to handle natural language queries
     # This avoids syntax errors with spaces/special chars
@@ -61,13 +70,16 @@ def search_by_keyword(query: str, limit: int = 5) -> List[Dict[str, Any]]:
         return response.data[:limit]
 
 
-def search_by_vector(query: str, limit: int = 5) -> List[Dict[str, Any]]:
+def search_by_vector(
+    query: str, limit: int = 5, access_token: str = None
+) -> List[Dict[str, Any]]:
     """
     Performs a Vector Similarity Search on document chunks.
 
     Args:
         query: The user's question (e.g. "What are the penalties?")
         limit: Max number of results to return
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         List of matching chunks sorted by semantic similarity
@@ -78,7 +90,13 @@ def search_by_vector(query: str, limit: int = 5) -> List[Dict[str, Any]]:
     3. PostgreSQL finds the closest vectors using cosine similarity
     4. Returns the most semantically similar chunks
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
     query_embedding = embeddings_model.embed_query(query)
@@ -91,7 +109,11 @@ def search_by_vector(query: str, limit: int = 5) -> List[Dict[str, Any]]:
 
 
 def hybrid_search(
-    query: str, keyword_weight: float = 0.3, vector_weight: float = 0.7, top_k: int = 5
+    query: str,
+    keyword_weight: float = 0.3,
+    vector_weight: float = 0.7,
+    top_k: int = 5,
+    access_token: str = None,
 ) -> List[Dict[str, Any]]:
     """
     Performs a Hybrid Search combining keyword and vector search.
@@ -106,6 +128,7 @@ def hybrid_search(
         keyword_weight: Weight for keyword search results (0.0-1.0, default: 0.3)
         vector_weight: Weight for vector search results (0.0-1.0, default: 0.7)
         top_k: Number of final results to return (default: 5)
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         List of chunks ranked by hybrid score
@@ -127,8 +150,12 @@ def hybrid_search(
     try:
         fetch_count = top_k * 2
 
-        keyword_results = search_by_keyword(query, limit=fetch_count)
-        vector_results = search_by_vector(query, limit=fetch_count)
+        keyword_results = search_by_keyword(
+            query, limit=fetch_count, access_token=access_token
+        )
+        vector_results = search_by_vector(
+            query, limit=fetch_count, access_token=access_token
+        )
 
         combined_results = _merge_search_results(
             keyword_results=keyword_results,

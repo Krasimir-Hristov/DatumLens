@@ -17,6 +17,7 @@ def ask_question(
     question: str,
     conversation_history: Optional[List[Dict[str, str]]] = None,
     top_k: int = 5,
+    access_token: Optional[str] = None,
 ) -> str:
     """
     Main RAG function - answers a question using retrieved context.
@@ -34,6 +35,7 @@ def ask_question(
                              Format: [{"role": "user", "content": "..."},
                                      {"role": "assistant", "content": "..."}]
         top_k: Number of chunks to retrieve (default: 5)
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         LLM's answer with citations
@@ -51,7 +53,7 @@ def ask_question(
     """
 
     # Step 1: Retrieve relevant chunks using hybrid search
-    retrieved_chunks = hybrid_search(question, top_k=top_k)
+    retrieved_chunks = hybrid_search(question, top_k=top_k, access_token=access_token)
 
     if not retrieved_chunks:
         return "I don't have any documents to search. " "Please upload documents first."

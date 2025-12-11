@@ -86,15 +86,15 @@
 
 **Цел:** Защита на приложението и персонализиране на данните (всеки вижда само своето).
 
-| Статус | Стъпка  | Описание                            | Технологии                                    |
-| :----: | :------ | :---------------------------------- | :-------------------------------------------- |
-|   ⬜   | **6.1** | **Auth: Supabase Setup**            | Настройка на Providers (Google/Email).        |
-|   ⬜   | **6.2** | **Auth: Backend Middleware**        | FastAPI dependency за валидация на JWT.       |
-|   ⬜   | **6.3** | **Security: RLS Policies (DB)**     | `auth.uid()` филтри за documents и chats.     |
-|   ⬜   | **6.4** | **Security: Storage Policies**      | Защита на файловете в Storage bucket.         |
-|   ⬜   | **6.5** | **Frontend: Protected Routes**      | Login Page, Middleware redirects, Auth Store. |
-|   ⬜   | **6.6** | **Feature: Persisted Chat History** | Запазване на история в DB с `user_id`.        |
-|   ⬜   | **6.7** | **Feature: Session Memory (Redis)** | (Optional) Redis оптимизация за сесиите.      |
+| Статус | Стъпка  | Описание                            | Технологии                                        |
+| :----: | :------ | :---------------------------------- | :------------------------------------------------ |
+|   ✅   | **6.1** | **Auth: Supabase Setup**            | Frontend Login, Client/Server setup.              |
+|   ✅   | **6.2** | **Auth: Backend Middleware**        | Implemented JWT validation & user checks.         |
+|   ✅   | **6.3** | **Security: RLS Policies (DB)**     | SQL Migration created (002_secure_schema.sql).    |
+|   ✅   | **6.4** | **Security: Storage Policies**      | SQL Migration created (003_storage_policies.sql). |
+|   ✅   | **6.5** | **Frontend: Protected Routes**      | middleware.ts, Header, Protected Pages.           |
+|   ⬜   | **6.6** | **Feature: Persisted Chat History** | Запазване на история в DB с `user_id`.            |
+|   ⬜   | **6.7** | **Feature: Session Memory (Redis)** | (Optional) Redis оптимизация за сесиите.          |
 
 ---
 

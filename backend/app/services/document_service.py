@@ -25,6 +25,7 @@ def create_document_record(
     page_count: int,
     chunk_count: int = 0,
     user_id: Optional[UUID] = None,
+    access_token: Optional[str] = None,
 ) -> dict:
     """
     Creates a new document record in the database.
@@ -36,11 +37,18 @@ def create_document_record(
         page_count: Number of pages in the PDF
         chunk_count: Number of chunks created (default 0)
         user_id: Optional user ID for future auth
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         The created document record with id
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     record = {
         "filename": filename,
@@ -64,18 +72,27 @@ def create_document_record(
     raise Exception("Failed to create document record")
 
 
-def update_document_chunk_count(document_id: UUID, chunk_count: int) -> dict:
+def update_document_chunk_count(
+    document_id: UUID, chunk_count: int, access_token: Optional[str] = None
+) -> dict:
     """
     Updates the chunk count for a document.
 
     Args:
         document_id: The document UUID
         chunk_count: New chunk count
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         Updated document record
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     response = (
         supabase.table("documents")
@@ -90,17 +107,26 @@ def update_document_chunk_count(document_id: UUID, chunk_count: int) -> dict:
     raise Exception(f"Failed to update document {document_id}")
 
 
-def list_documents(user_id: Optional[UUID] = None) -> List[dict]:
+def list_documents(
+    user_id: Optional[UUID] = None, access_token: Optional[str] = None
+) -> List[dict]:
     """
     Lists all documents, optionally filtered by user.
 
     Args:
         user_id: Optional filter by user (for future auth)
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         List of document records
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     query = supabase.table("documents").select("*").order("uploaded_at", desc=True)
 
@@ -131,17 +157,26 @@ def get_all_doc_names() -> List[str]:
     return [doc["filename"] for doc in response.data]
 
 
-def get_document_by_id(document_id: UUID) -> Optional[dict]:
+def get_document_by_id(
+    document_id: UUID, access_token: Optional[str] = None
+) -> Optional[dict]:
     """
     Gets a single document by ID.
 
     Args:
         document_id: The document UUID
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         Document record or None if not found
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     response = (
         supabase.table("documents")
@@ -176,21 +211,28 @@ def get_document_by_filename(filename: str) -> Optional[dict]:
     return None
 
 
-def delete_document(document_id: UUID) -> dict:
+def delete_document(document_id: UUID, access_token: Optional[str] = None) -> dict:
     """
     Deletes a document and all its chunks (via cascade).
     Also removes the file from storage.
 
     Args:
         document_id: The document UUID to delete
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         Success message with deleted counts
     """
-    supabase = get_supabase_client()
+    from app.db.supabase import get_user_supabase_client
+
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     # First, get the document to find the storage path
-    doc = get_document_by_id(document_id)
+    doc = get_document_by_id(document_id, access_token)
     if not doc:
         raise Exception(f"Document {document_id} not found")
 
@@ -251,13 +293,16 @@ def delete_document_by_filename(filename: str) -> dict:
     return delete_document(doc["id"])
 
 
-def upload_file_to_storage(file_bytes: bytes, filename: str) -> str:
+def upload_file_to_storage(
+    file_bytes: bytes, filename: str, user_id: Optional[str] = None
+) -> str:
     """
     Uploads a file to Supabase Storage.
 
     Args:
         file_bytes: The file content as bytes
         filename: Original filename
+        user_id: Optional user ID to namespace the file
 
     Returns:
         The storage path where the file was saved
@@ -268,7 +313,11 @@ def upload_file_to_storage(file_bytes: bytes, filename: str) -> str:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # Remove special characters from filename
     safe_filename = "".join(c for c in filename if c.isalnum() or c in "._-")
-    storage_path = f"{timestamp}_{safe_filename}"
+
+    if user_id:
+        storage_path = f"{user_id}/{timestamp}_{safe_filename}"
+    else:
+        storage_path = f"{timestamp}_{safe_filename}"
 
     # Upload to the 'documents' bucket
     try:

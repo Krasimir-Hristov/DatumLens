@@ -1,10 +1,12 @@
 from langchain_core.documents import Document
 from typing import List, Optional
-from app.db.supabase import get_supabase_client
+from app.db.supabase import get_supabase_client, get_user_supabase_client
 
 
 def save_chunks_to_database(
-    chunks: List[Document], document_id: Optional[str] = None
+    chunks: List[Document],
+    document_id: Optional[str] = None,
+    access_token: Optional[str] = None,
 ) -> dict:
     """
     Saves processed chunks with their embeddings to the Supabase database.
@@ -12,6 +14,7 @@ def save_chunks_to_database(
     Args:
         chunks: List of Document objects with embeddings in metadata
         document_id: Optional UUID of the parent document (for FK relationship)
+        access_token: JWT token на потребителя за RLS политики
 
     Returns:
         Dictionary with success status and count of saved chunks
@@ -32,7 +35,11 @@ def save_chunks_to_database(
     - created_at: timestamp (auto-generated)
     """
 
-    supabase = get_supabase_client()
+    # Използваме user-specific клиент ако имаме токен
+    if access_token:
+        supabase = get_user_supabase_client(access_token)
+    else:
+        supabase = get_supabase_client()
 
     # Prepare data for insertion
     records_to_insert = []

@@ -13,8 +13,10 @@ import logging
 from uuid import UUID
 import os
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse, Response
+from typing import Annotated
+from app.api.deps import CurrentUser, get_current_user_with_token
 
 from app.services.document_processor import (
     load_pdf_from_bytes,
@@ -42,55 +44,47 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 @router.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+    file: UploadFile = File(...),
+):
     """
     Upload a PDF document, store it, and process it for RAG.
-
-    Steps:
-    1. Validate the file (must be PDF)
-    2. Read the file bytes
-    3. Upload to Supabase Storage
-    4. Create document record in database
-    5. Load PDF and extract pages
-    6. Chunk the pages using AI semantic chunking
-    7. Create embeddings for each chunk
-    8. Save chunks to database with document_id reference
-    9. Update document with chunk count
-
-    Returns:
-        Success message with document ID and chunk count
+    Protected by Supabase Auth.
     """
+    current_user, access_token = user_with_token
+
     # Step 1: Validate file type
     if not file.filename or not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
     try:
-        logger.info(f"Starting upload for file: {file.filename}")
+        user_id = current_user.id
+        logger.info(f"Starting upload for file: {file.filename} by user: {user_id}")
 
         # Step 2: Read the uploaded file into memory
         file_bytes = await file.read()
         file_size = len(file_bytes)
         logger.info(f"File read successfully. Size: {file_size} bytes")
 
-        # Step 2.5: Check for duplicate filename
-        # We do this AFTER reading the file to ensure the HTTP request body is fully consumed.
+        # Step 2.5: Check for duplicate filename (TODO: Scope check by user_id in future)
         existing_doc = get_document_by_filename(file.filename)
-        if existing_doc:
+        if existing_doc and existing_doc.get("user_id") == user_id:
             raise HTTPException(
                 status_code=409,
-                detail=f"Document '{file.filename}' already exists. Delete it first or rename your file.",
+                detail=f"Document '{file.filename}' already exists. Delete it first.",
             )
 
         # Step 3: Upload to Supabase Storage
         try:
-            storage_path = upload_file_to_storage(file_bytes, file.filename)
+            storage_path = upload_file_to_storage(file_bytes, file.filename, user_id)
             logger.info(f"File uploaded to storage: {storage_path}")
         except Exception as e:
             logger.warning(f"Storage upload failed (switching to local storage): {e}")
             # Ensure directory exists
             os.makedirs("uploaded_files", exist_ok=True)
             # Save file locally
-            local_filename = f"{file.filename}"
+            local_filename = f"{user_id}_{file.filename}"
             local_path = os.path.join("uploaded_files", local_filename)
             with open(local_path, "wb") as f:
                 f.write(file_bytes)
@@ -115,6 +109,8 @@ async def upload_document(file: UploadFile = File(...)):
             file_size=file_size,
             page_count=page_count,
             chunk_count=0,
+            user_id=UUID(user_id),
+            access_token=access_token,
         )
         document_id = doc_record["id"]
         logger.info(f"Document record created with ID: {document_id}")
@@ -130,11 +126,13 @@ async def upload_document(file: UploadFile = File(...)):
         for chunk in chunks_with_embeddings:
             chunk.metadata["document_id"] = document_id
 
-        result = save_chunks_to_database(chunks_with_embeddings, document_id)
+        result = save_chunks_to_database(
+            chunks_with_embeddings, document_id, access_token
+        )
         chunk_count = result["chunks_saved"]
 
         # Step 9: Update document with chunk count
-        update_document_chunk_count(document_id, chunk_count)
+        update_document_chunk_count(document_id, chunk_count, access_token)
 
         # Return success response
         return JSONResponse(
@@ -161,15 +159,18 @@ async def upload_document(file: UploadFile = File(...)):
 
 
 @router.get("/list")
-async def list_documents():
+async def list_documents(
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
-    List all uploaded documents.
+    List all uploaded documents for the authenticated user.
+    Protected by Supabase Auth.
+    """
+    current_user, access_token = user_with_token
 
-    Returns:
-        List of documents with metadata (id, filename, size, pages, chunks, date)
-    """
     try:
-        documents = list_docs_service()
+        user_id = UUID(current_user.id)
+        documents = list_docs_service(user_id=user_id, access_token=access_token)
 
         return JSONResponse(
             status_code=200,
@@ -188,20 +189,25 @@ async def list_documents():
 
 
 @router.get("/{document_id}")
-async def get_document(document_id: str):
+async def get_document(
+    document_id: str,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
     Get details of a specific document.
-
-    Args:
-        document_id: UUID of the document
-
-    Returns:
-        Document metadata
+    Protected: Users can only access their own documents.
     """
+    current_user, access_token = user_with_token
+
     try:
-        doc = get_document_by_id(UUID(document_id))
+        user_id = current_user.id
+        doc = get_document_by_id(UUID(document_id), access_token)
 
         if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Check ownership
+        if doc.get("user_id") != user_id:
             raise HTTPException(status_code=404, detail="Document not found")
 
         return JSONResponse(
@@ -220,20 +226,25 @@ async def get_document(document_id: str):
 
 
 @router.get("/{document_id}/download")
-async def download_document(document_id: str):
+async def download_document(
+    document_id: str,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
     Download the original PDF file.
-
-    Args:
-        document_id: UUID of the document
-
-    Returns:
-        PDF file as binary response
+    Protected: Users can only download their own documents.
     """
+    current_user, access_token = user_with_token
+
     try:
-        doc = get_document_by_id(UUID(document_id))
+        user_id = current_user.id
+        doc = get_document_by_id(UUID(document_id), access_token)
 
         if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Check ownership
+        if doc.get("user_id") != user_id:
             raise HTTPException(status_code=404, detail="Document not found")
 
         storage_path = doc.get("storage_path")
@@ -273,20 +284,26 @@ async def download_document(document_id: str):
 
 
 @router.get("/{document_id}/url")
-async def get_document_url(document_id: str, request: Request):
+async def get_document_url(
+    document_id: str,
+    request: Request,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
     Get the public URL for a document (for PDF viewer).
-
-    Args:
-        document_id: UUID of the document
-
-    Returns:
-        Public URL string
+    Protected: Users can only get URLs for their own documents.
     """
+    current_user, access_token = user_with_token
+
     try:
-        doc = get_document_by_id(UUID(document_id))
+        user_id = current_user.id
+        doc = get_document_by_id(UUID(document_id), access_token)
 
         if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        # Check ownership
+        if doc.get("user_id") != user_id:
             raise HTTPException(status_code=404, detail="Document not found")
 
         storage_path = doc.get("storage_path")
@@ -328,24 +345,36 @@ async def get_document_url(document_id: str, request: Request):
 
 
 @router.delete("/{document_id}")
-async def delete_document(document_id: str):
+async def delete_document(
+    document_id: str,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
     """
-    Delete a document by ID (including all chunks and storage file).
-
-    Args:
-        document_id: UUID of the document
-
-    Returns:
-        Success message with deletion details
+    Delete a document and all its chunks.
+    Protected: Users can only delete their own documents.
     """
+    current_user, access_token = user_with_token
+
     try:
-        result = delete_doc_service(UUID(document_id))
+        user_id = current_user.id
+
+        # Verify ownership before deletion
+        doc = get_document_by_id(UUID(document_id), access_token)
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        if doc.get("user_id") != user_id:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        result = delete_doc_service(UUID(document_id), access_token)
 
         return JSONResponse(
             status_code=200,
             content=result,
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error deleting document: {e}")
         raise HTTPException(
