@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { MessageSquare, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -9,16 +9,57 @@ import { useChatStore } from '@/store/use-chat-store';
 import { ChatMessage } from './chat-message';
 import { ChatInput } from './chat-input';
 import { Button } from '@/components/ui/button';
+import { type Citation } from '@/lib/citation-parser';
 
 export function ChatInterface() {
   const { messages, isLoading, addMessage, setLoading, clearMessages } =
     useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Fetch documents map to resolve filenames to IDs for citations
+  const { data: documents } = useQuery({
+    queryKey: ['documents'],
+    queryFn: api.listDocuments,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
   // Auto-scroll към дъното при ново съобщение
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleCitationClick = async (citation: Citation) => {
+    if (!documents) {
+      toast.error('Loading documents...', {
+        description: 'Please try again in a moment.',
+      });
+      return;
+    }
+
+    const doc = documents.documents.find(
+      (d: any) => d.filename === citation.filename
+    );
+
+    if (!doc) {
+      toast.error('Document not found', {
+        description: `Could not find "${citation.filename}" in your library.`,
+      });
+      return;
+    }
+
+    try {
+      const toastId = toast.loading('Opening document...');
+      const { url } = await api.getDocumentUrl(doc.id);
+
+      // Open in new tab (PDF viewer)
+      window.open(url, '_blank');
+      toast.dismiss(toastId);
+    } catch (error: any) {
+      toast.error('Cannot open document', {
+        description: error.message || 'File may be missing or deleted.',
+      });
+    }
+  };
 
   const chatMutation = useMutation({
     mutationFn: (question: string) => api.askQuestion(question),
@@ -126,6 +167,7 @@ export function ChatInterface() {
                 role={message.role}
                 content={message.content}
                 sources={message.sources}
+                onCitationClick={handleCitationClick}
               />
             ))}
 

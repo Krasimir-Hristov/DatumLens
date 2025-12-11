@@ -34,12 +34,6 @@ export default function Home() {
               </span>
             </div>
             <div className='flex items-center gap-4'>
-              <Link href='/upload'>
-                <Button variant='outline' size='sm'>
-                  <Upload className='h-4 w-4 mr-2' />
-                  Upload
-                </Button>
-              </Link>
               <Link href='/knowledge'>
                 <Button variant='outline' size='sm'>
                   <Database className='h-4 w-4 mr-2' />
@@ -85,10 +79,10 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className='flex flex-col sm:flex-row items-center justify-center gap-4 pt-8'>
-            <Link href='/upload'>
+            <Link href='/knowledge'>
               <Button size='lg' variant='outline' className='w-full sm:w-auto'>
-                <Upload className='h-5 w-5 mr-2' />
-                Upload Documents
+                <Database className='h-5 w-5 mr-2' />
+                Manage Knowledge
               </Button>
             </Link>
             <Link href='/chat'>
