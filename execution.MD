@@ -1,6 +1,6 @@
 # 🚀 DatumLens RAG: Execution Plan
 
-**Current Phase:** `Phase 5: Polish & Final Features`
+**Current Phase:** `Phase 6: Security Hardening & Deployment`
 **Status:** 🏗️ In Progress
 
 ---
@@ -67,7 +67,7 @@
 
 ---
 
-## ✨ Фаза 5: Polish & Final Features
+## ✅ Фаза 5: Polish & Final Features
 
 **Цел:** Внедряване на ключовата функция за хайлайтване на цитати и добавяне на SaaS-готовност.
 
@@ -77,10 +77,11 @@
 |   ✅   | **5.2** | **Knowledge: Document Registry**     | Backend: SQL Table, Storage bucket, Fallback logic          |
 |   ✅   | **5.3** | **Knowledge: Management UI**         | Frontend: `/knowledge` page, CRUD operations                |
 |   ✅   | **5.4** | **Safety: Duplicate Prevention**     | Backend check for duplicate uploads                         |
-|   ⬜   | **5.5** | **Citation: PDF Viewer Integration** | `react-pdf`                                                 |
-|   ⬜   | **5.6** | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                   |
+|  Native | **5.5** | **Citation: PDF Viewer Integration** | *Implemented via browser native viewer with `#page=X`*      |
+| Skipped | **5.6** | **Citation: Highlighting Logic**     | *Postponed for v2 (requires react-pdf)*                     |
 |   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход. |
 |   ⬜   | **5.8** | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).   |
+
 
 ---
 

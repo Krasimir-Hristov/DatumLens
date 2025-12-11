@@ -51,8 +51,9 @@ export function ChatInterface() {
       const toastId = toast.loading('Opening document...');
       const { url } = await api.getDocumentUrl(doc.id);
 
-      // Open in new tab (PDF viewer)
-      window.open(url, '_blank');
+      // Open in new tab (PDF viewer) with page anchor
+      const pageParam = citation.page ? `#page=${citation.page}` : '';
+      window.open(`${url}${pageParam}`, '_blank');
       toast.dismiss(toastId);
     } catch (error: any) {
       toast.error('Cannot open document', {
