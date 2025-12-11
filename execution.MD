@@ -1,6 +1,6 @@
 # 🚀 DatumLens RAG: Execution Plan
 
-**Current Phase:** `Phase 6: Security Hardening & Deployment`
+**Current Phase:** `Phase 6: Security & User Persistence`
 **Status:** 🏗️ In Progress
 
 ---
@@ -71,29 +71,72 @@
 
 **Цел:** Внедряване на ключовата функция за хайлайтване на цитати и добавяне на SaaS-готовност.
 
-| Статус | Стъпка  | Описание                             | Технологии                                                  |
-| :----: | :------ | :----------------------------------- | :---------------------------------------------------------- |
-|   ✅   | **5.1** | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                              |
-|   ✅   | **5.2** | **Knowledge: Document Registry**     | Backend: SQL Table, Storage bucket, Fallback logic          |
-|   ✅   | **5.3** | **Knowledge: Management UI**         | Frontend: `/knowledge` page, CRUD operations                |
-|   ✅   | **5.4** | **Safety: Duplicate Prevention**     | Backend check for duplicate uploads                         |
-|  Native | **5.5** | **Citation: PDF Viewer Integration** | *Implemented via browser native viewer with `#page=X`*      |
-| Skipped | **5.6** | **Citation: Highlighting Logic**     | *Postponed for v2 (requires react-pdf)*                     |
-|   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход. |
-|   ⬜   | **5.8** | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).   |
-
+| Статус  | Стъпка  | Описание                             | Технологии                                             |
+| :-----: | :------ | :----------------------------------- | :----------------------------------------------------- |
+|   ✅    | **5.1** | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                         |
+|   ✅    | **5.2** | **Knowledge: Document Registry**     | Backend: SQL Table, Storage bucket, Fallback logic     |
+|   ✅    | **5.3** | **Knowledge: Management UI**         | Frontend: `/knowledge` page, CRUD operations           |
+|   ✅    | **5.4** | **Safety: Duplicate Prevention**     | Backend check for duplicate uploads                    |
+| Native  | **5.5** | **Citation: PDF Viewer Integration** | _Implemented via browser native viewer with `#page=X`_ |
+| Skipped | **5.6** | **Citation: Highlighting Logic**     | _Postponed for v2 (requires react-pdf)_                |
 
 ---
 
-## 🔒 Фаза 6: Security Hardening & Deployment
+## 🔒 Фаза 6: Security & User Persistence
 
-**Цел:** Осигуряване на сигурността на приложението чрез RLS, Auth и подготовка за продукция.
+**Цел:** Защита на приложението и персонализиране на данните (всеки вижда само своето).
 
-| Статус | Стъпка  | Описание                              | Технологии                                      |
-| :----: | :------ | :------------------------------------ | :---------------------------------------------- |
-|   ⬜   | **6.1** | **Security: Supabase Auth**           | Настройка на Auth Providers (Email/Google)      |
-|   ⬜   | **6.2** | **Security: RLS Policies (DB)**       | Ограничаване на достъпа до данни по `user_id`   |
-|   ⬜   | **6.3** | **Security: Storage Policies**        | RLS за private bucket access (removing Public)  |
-|   ⬜   | **6.4** | **Security: Backend Auth Middleware** | Валидация на JWT токени във FastAPI             |
-|   ⬜   | **6.5** | **Deployment: Dockerization**         | `Dockerfile`, `docker-compose`                  |
-|   ⬜   | **6.6** | **Deployment: Production Build**      | `Vercel` (Frontend), `Render/Railway` (Backend) |
+| Статус | Стъпка  | Описание                            | Технологии                                    |
+| :----: | :------ | :---------------------------------- | :-------------------------------------------- |
+|   ⬜   | **6.1** | **Auth: Supabase Setup**            | Настройка на Providers (Google/Email).        |
+|   ⬜   | **6.2** | **Auth: Backend Middleware**        | FastAPI dependency за валидация на JWT.       |
+|   ⬜   | **6.3** | **Security: RLS Policies (DB)**     | `auth.uid()` филтри за documents и chats.     |
+|   ⬜   | **6.4** | **Security: Storage Policies**      | Защита на файловете в Storage bucket.         |
+|   ⬜   | **6.5** | **Frontend: Protected Routes**      | Login Page, Middleware redirects, Auth Store. |
+|   ⬜   | **6.6** | **Feature: Persisted Chat History** | Запазване на история в DB с `user_id`.        |
+|   ⬜   | **6.7** | **Feature: Session Memory (Redis)** | (Optional) Redis оптимизация за сесиите.      |
+
+---
+
+## 🎨 Фаза 7: UI/UX Polish & Mobile
+
+**Цел:** Превръщане на грозния прототип в красиво, мобилно-оптимизирано приложение.
+
+| Статус | Стъпка  | Описание                            | Технологии                                 |
+| :----: | :------ | :---------------------------------- | :----------------------------------------- |
+|   ⬜   | **7.1** | **Mobile: Responsiveness**          | Hamburger menu, touch targets, stacking.   |
+|   ⬜   | **7.2** | **Design: Typography & Animations** | `framer-motion`, Fonts, Transitions.       |
+|   ⬜   | **7.3** | **UX: Error States & Loading**      | Skeletons, Empty States, Error Boundaries. |
+
+---
+
+## 🧪 Фаза 8: Testing & QA
+
+**Цел:** Гарантиране на качеството чрез автоматизирани тестове.
+
+| Статус | Стъпка  | Описание                          | Технологии                               |
+| :----: | :------ | :-------------------------------- | :--------------------------------------- |
+|   ⬜   | **8.1** | **Testing: Backend Unit Tests**   | `pytest`, Testing RAG logic without LLM. |
+|   ⬜   | **8.2** | **Testing: Frontend Integration** | `React Testing Library` / `Playwright`.  |
+
+---
+
+## 🤖 Фаза 9: Advanced AI Agent
+
+**Цел:** Даване на суперсили на бота.
+
+| Статус | Стъпка  | Описание                | Технологии                                  |
+| :----: | :------ | :---------------------- | :------------------------------------------ |
+|   ⬜   | **9.1** | **Agent: Tool Calling** | Позволяване на бота да вика Python функции. |
+|   ⬜   | **9.2** | **Agent: Web Search**   | Интеграция с търсачка за актуални данни.    |
+
+---
+
+## 🚀 Фаза 10: Deployment
+
+**Цел:** Пускане на живо.
+
+| Статус | Стъпка   | Описание                         | Технологии                                      |
+| :----: | :------- | :------------------------------- | :---------------------------------------------- |
+|   ⬜   | **10.1** | **Deployment: Dockerization**    | `Dockerfile`, `docker-compose`.                 |
+|   ⬜   | **10.2** | **Deployment: Production Build** | `Vercel` (Frontend), `Render/Railway` (Backend) |
