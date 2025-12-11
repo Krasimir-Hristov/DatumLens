@@ -23,7 +23,7 @@ export default function ChatPage() {
                 DatumLens Chat
               </span>
             </div>
-            <Link href='/upload'>
+            <Link href='/knowledge'>
               <Button variant='outline' size='sm'>
                 <Upload className='h-4 w-4 mr-2' />
                 Upload More
