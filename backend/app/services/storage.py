@@ -1,15 +1,17 @@
 from langchain_core.documents import Document
-from typing import List
+from typing import List, Optional
 from app.db.supabase import get_supabase_client
-import json
 
 
-def save_chunks_to_database(chunks: List[Document]) -> dict:
+def save_chunks_to_database(
+    chunks: List[Document], document_id: Optional[str] = None
+) -> dict:
     """
     Saves processed chunks with their embeddings to the Supabase database.
 
     Args:
         chunks: List of Document objects with embeddings in metadata
+        document_id: Optional UUID of the parent document (for FK relationship)
 
     Returns:
         Dictionary with success status and count of saved chunks
@@ -18,11 +20,12 @@ def save_chunks_to_database(chunks: List[Document]) -> dict:
     1. Connects to Supabase
     2. For each chunk:
        - Extracts text, metadata, and embedding
-       - Inserts into the document_chunks table
+       - Inserts into the document_chunks table with document_id reference
     3. Returns confirmation
 
     Database schema reminder:
     - id: UUID (auto-generated)
+    - document_id: UUID (foreign key to documents table)
     - content: text (the chunk text)
     - metadata: jsonb (source_filename, page_number, chunk_index, etc.)
     - embedding: vector(1536) (the OpenAI embedding)
@@ -43,6 +46,9 @@ def save_chunks_to_database(chunks: List[Document]) -> dict:
         metadata_copy = chunk.metadata.copy()
         if "embedding" in metadata_copy:
             del metadata_copy["embedding"]
+        # Also remove document_id from metadata (it's stored in a separate column)
+        if "document_id" in metadata_copy:
+            del metadata_copy["document_id"]
 
         # Create a record for the database
         record = {
@@ -51,11 +57,15 @@ def save_chunks_to_database(chunks: List[Document]) -> dict:
             "embedding": embedding,  # This will be stored as a vector
         }
 
+        # Add document_id if provided
+        if document_id:
+            record["document_id"] = document_id
+
         records_to_insert.append(record)
 
     # Insert all records into the database
     # Supabase handles the UUIDs and timestamps automatically
-    response = supabase.table("document_chunks").insert(records_to_insert).execute()
+    supabase.table("document_chunks").insert(records_to_insert).execute()
 
     return {
         "success": True,

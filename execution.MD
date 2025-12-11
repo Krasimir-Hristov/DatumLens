@@ -78,7 +78,7 @@
 |   ⬜   | **5.3**  | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                         |
 |   ⬜   | **5.4**  | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                   |
 |   ⬜   | **5.5**  | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                     |
-|   ⬜   | **5.6**  | **Document Registry: Files Table**   | Таблица `documents` за списък с файлове + Supabase Storage bucket |
+|   🔄   | **5.6**  | **Document Registry: Files Table**   | Таблица `documents` за списък с файлове + Supabase Storage bucket |
 |   ⬜   | **5.7**  | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace).   |
 |   ⬜   | **5.8**  | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.       |
 |   ⬜   | **5.9**  | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).         |
