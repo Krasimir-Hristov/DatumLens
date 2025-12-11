@@ -1,55 +1,18 @@
 import Link from 'next/link';
-import {
-  MessageSquare,
-  Upload,
-  Sparkles,
-  ArrowRight,
-  Database,
-} from 'lucide-react';
+import { ArrowRight, Database, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Header } from '@/components/layout/header';
 
 export default function Home() {
   return (
-    <main className='relative min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950'>
-      {/* Animated Background Blobs */}
+    <main className='min-h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden'>
+      {/* Background Gradients */}
       <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse' />
-        <div
-          className='absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-400/20 dark:bg-indigo-600/10 rounded-full blur-3xl animate-pulse'
-          style={{ animationDelay: '1s' }}
-        />
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-purple-400/30 dark:bg-purple-900/20 rounded-full blur-3xl' />
+        <div className='absolute top-20 -left-20 w-72 h-72 bg-blue-400/30 dark:bg-blue-900/20 rounded-full blur-3xl' />
       </div>
 
-      {/* Navigation */}
-      <nav className='relative z-10 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between h-16'>
-            <div className='flex items-center gap-2'>
-              <div className='h-2 w-2 rounded-full bg-blue-500 animate-pulse' />
-              <span className='text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400'>
-                DatumLens
-              </span>
-              <span className='ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600 ring-1 ring-inset ring-blue-600/10 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-400/20'>
-                v1.0
-              </span>
-            </div>
-            <div className='flex items-center gap-4'>
-              <Link href='/knowledge'>
-                <Button variant='outline' size='sm'>
-                  <Database className='h-4 w-4 mr-2' />
-                  Knowledge
-                </Button>
-              </Link>
-              <Link href='/chat'>
-                <Button size='sm'>
-                  <MessageSquare className='h-4 w-4 mr-2' />
-                  Chat
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Hero Section */}
       <div className='relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-64px)] px-4'>

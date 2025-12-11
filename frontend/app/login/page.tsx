@@ -21,6 +21,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -39,10 +40,15 @@ export default function LoginPage() {
           return;
         }
 
-        // Sign Up Logic
+        // Sign Up Logic with Username
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              username: username,
+            },
+          },
         });
         if (error) throw error;
 
@@ -54,7 +60,6 @@ export default function LoginPage() {
           toast.success('Account created!', {
             description: 'Please check your email to verify your account.',
           });
-          // Redirect to home even if verification is pending (optional UX choice)
           router.push('/');
         }
       } else {
@@ -98,12 +103,29 @@ export default function LoginPage() {
           </h2>
           <p className='text-sm text-slate-500 dark:text-slate-400'>
             {isSignUp
-              ? 'Enter your email to get started with DatumLens'
+              ? 'Enter your details to get started with DatumLens'
               : 'Enter your credentials to access your workspace'}
           </p>
         </CardHeader>
         <form onSubmit={handleAuth}>
           <CardContent className='space-y-4'>
+            {isSignUp && (
+              <div className='space-y-2 animate-in fade-in slide-in-from-top-4 duration-300'>
+                <Label htmlFor='username'>Username</Label>
+                <div className='relative'>
+                  <Mail className='absolute left-3 top-3 h-4 w-4 text-slate-400' />
+                  <Input
+                    id='username'
+                    type='text'
+                    placeholder='johndoe'
+                    className='pl-9'
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
             <div className='space-y-2'>
               <Label htmlFor='email'>Email</Label>
               <div className='relative'>

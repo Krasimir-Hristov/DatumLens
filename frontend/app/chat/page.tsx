@@ -1,61 +1,13 @@
-'use client';
-
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { ArrowLeft, Upload, LogOut } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ChatInterface } from '@/components/chat';
-import { toast } from 'sonner';
+import { Header } from '@/components/layout/header';
+import Link from 'next/link';
 
 export default function ChatPage() {
-  const router = useRouter();
-  const supabase = createClient();
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Error signing out');
-      return;
-    }
-    router.push('/login');
-    router.refresh();
-  };
-
   return (
     <main className='flex flex-col h-screen bg-slate-50 dark:bg-slate-950'>
-      {/* Navigation */}
-      <nav className='shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex items-center justify-between h-16'>
-            <div className='flex items-center gap-4'>
-              <Link
-                href='/'
-                className='flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors'
-              >
-                <ArrowLeft className='h-4 w-4' />
-                <span className='text-sm font-medium'>Home</span>
-              </Link>
-              <div className='h-4 w-px bg-slate-200 dark:bg-slate-800' />
-              <span className='text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400'>
-                DatumLens Chat
-              </span>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Link href='/knowledge'>
-                <Button variant='outline' size='sm'>
-                  <Upload className='h-4 w-4 mr-2' />
-                  Manage Knowledge
-                </Button>
-              </Link>
-              <Button size='sm' variant='ghost' onClick={handleLogout}>
-                <LogOut className='h-4 w-4 mr-2' />
-                Sign out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Chat Interface - Full Height */}
       <div className='flex-1 overflow-hidden max-w-5xl mx-auto w-full'>
