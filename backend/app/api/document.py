@@ -11,8 +11,9 @@ This module provides endpoints for:
 
 import logging
 from uuid import UUID
+import os
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 
 from app.services.document_processor import (
@@ -26,6 +27,7 @@ from app.services.document_service import (
     update_document_chunk_count,
     list_documents as list_docs_service,
     get_document_by_id,
+    get_document_by_filename,
     delete_document as delete_doc_service,
     delete_document_by_filename,
     upload_file_to_storage,
@@ -70,13 +72,31 @@ async def upload_document(file: UploadFile = File(...)):
         file_size = len(file_bytes)
         logger.info(f"File read successfully. Size: {file_size} bytes")
 
+        # Step 2.5: Check for duplicate filename
+        # We do this AFTER reading the file to ensure the HTTP request body is fully consumed.
+        existing_doc = get_document_by_filename(file.filename)
+        if existing_doc:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Document '{file.filename}' already exists. Delete it first or rename your file.",
+            )
+
         # Step 3: Upload to Supabase Storage
         try:
             storage_path = upload_file_to_storage(file_bytes, file.filename)
             logger.info(f"File uploaded to storage: {storage_path}")
         except Exception as e:
-            logger.warning(f"Storage upload failed (continuing without storage): {e}")
-            storage_path = f"local/{file.filename}"  # Fallback path
+            logger.warning(f"Storage upload failed (switching to local storage): {e}")
+            # Ensure directory exists
+            os.makedirs("uploaded_files", exist_ok=True)
+            # Save file locally
+            local_filename = f"{file.filename}"
+            local_path = os.path.join("uploaded_files", local_filename)
+            with open(local_path, "wb") as f:
+                f.write(file_bytes)
+
+            storage_path = f"local/{local_filename}"
+            logger.info(f"File saved locally to: {local_path}")
 
         # Step 4: Load PDF and extract text from pages
         documents = await load_pdf_from_bytes(file_bytes, file.filename)
@@ -217,19 +237,30 @@ async def download_document(document_id: str):
             raise HTTPException(status_code=404, detail="Document not found")
 
         storage_path = doc.get("storage_path")
-        if not storage_path or storage_path.startswith("local/"):
+
+        if not storage_path:
             raise HTTPException(
-                status_code=404, detail="Original file not available in storage"
+                status_code=404, detail="No storage path found for document"
             )
 
-        file_bytes = get_file_from_storage(storage_path)
+        # Handle local files
+        if storage_path.startswith("local/"):
+            filename = storage_path.replace("local/", "")
+            local_path = os.path.join("uploaded_files", filename)
+
+            if not os.path.exists(local_path):
+                raise HTTPException(status_code=404, detail="Local file not found")
+
+            with open(local_path, "rb") as f:
+                file_bytes = f.read()
+        else:
+            # Handle Supabase storage files
+            file_bytes = get_file_from_storage(storage_path)
 
         return Response(
             content=file_bytes,
             media_type="application/pdf",
-            headers={
-                "Content-Disposition": f'attachment; filename="{doc["filename"]}"'
-            },
+            headers={"Content-Disposition": f'inline; filename="{doc["filename"]}"'},
         )
 
     except HTTPException:
@@ -242,7 +273,7 @@ async def download_document(document_id: str):
 
 
 @router.get("/{document_id}/url")
-async def get_document_url(document_id: str):
+async def get_document_url(document_id: str, request: Request):
     """
     Get the public URL for a document (for PDF viewer).
 
@@ -259,12 +290,23 @@ async def get_document_url(document_id: str):
             raise HTTPException(status_code=404, detail="Document not found")
 
         storage_path = doc.get("storage_path")
-        if not storage_path or storage_path.startswith("local/"):
-            raise HTTPException(
-                status_code=404, detail="Original file not available in storage"
-            )
 
-        url = get_file_public_url(storage_path)
+        if not storage_path:
+            raise HTTPException(status_code=404, detail="No storage path found")
+
+        # If local file, return link to our own download endpoint
+        if storage_path.startswith("local/"):
+            # Construct URL to the download endpoint
+            base_url = str(request.base_url).rstrip("/")
+            url = f"{base_url}/documents/{document_id}/download"
+        else:
+            # If Supabase storage, get signed public URL
+            try:
+                url = get_file_public_url(storage_path)
+            except Exception:
+                # Fallback if we can't get public URL directly
+                base_url = str(request.base_url).rstrip("/")
+                url = f"{base_url}/documents/{document_id}/download"
 
         return JSONResponse(
             status_code=200,

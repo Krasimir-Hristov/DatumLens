@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional
 from app.services.search import hybrid_search
 from app.services.llm import get_llm_model
 from app.services.prompts import get_system_prompt
+from app.services.document_service import get_all_doc_names
 
 
 def ask_question(
@@ -60,7 +61,10 @@ def ask_question(
 
     # Step 3: Build the full prompt
     system_prompt = get_system_prompt()
-    user_prompt = _build_user_prompt(question, context)
+
+    # Get all available filenames to give LLM full awareness of the library
+    available_docs = get_all_doc_names()
+    user_prompt = _build_user_prompt(question, context, available_docs)
 
     # Step 4: Build messages with conversation history
     messages = [("system", system_prompt)]
@@ -133,29 +137,40 @@ Content: "{content}"
     return "\n".join(context_parts)
 
 
-def _build_user_prompt(question: str, context: str) -> str:
+def _build_user_prompt(
+    question: str, context: str, available_docs: List[str] = None
+) -> str:
     """
-    Builds the user prompt combining question and context.
+    Builds the user prompt combining question, context, and library info.
 
     Args:
         question: User's question
         context: Formatted context from documents
+        available_docs: List of all filenames in the library
 
     Returns:
         Complete user prompt string
     """
+    available_docs_str = "\n".join([f"- {name}" for name in (available_docs or [])])
+    if not available_docs_str:
+        available_docs_str = "(No documents in library)"
+
     prompt = f"""Based on the following documents, please answer the question.
 
-**DOCUMENTS:**
+**LIBRARY (All Available Files):**
+{available_docs_str}
+
+**RELEVANT CONTEXT (Chunks found for query):**
 {context}
 
 **QUESTION:**
 {question}
 
 **INSTRUCTIONS:**
-- Answer ONLY using information from the documents above
-- Always cite sources in format: [Source: filename.pdf, Page X]
-- If the answer is not in the documents, say "I don't have information about this in the provided documents."
+- You may use information from both the LIBRARY list and the RELEVANT CONTEXT chunks.
+- If asked about what documents are available, list them from the LIBRARY section.
+- Always cite sources in format: [Source: filename.pdf, Page X] when using content from chunks.
+- If the answer is not found in either the chunks or the file list, say "I don't have information about this."
 - Respond in the SAME language as the question
 """
     return prompt

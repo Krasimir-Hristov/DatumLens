@@ -56,7 +56,9 @@ def create_document_record(
     response = supabase.table("documents").insert(record).execute()
 
     if response.data:
-        logger.info(f"Created document record: {filename} with ID {response.data[0]['id']}")
+        logger.info(
+            f"Created document record: {filename} with ID {response.data[0]['id']}"
+        )
         return response.data[0]
 
     raise Exception("Failed to create document record")
@@ -110,6 +112,25 @@ def list_documents(user_id: Optional[UUID] = None) -> List[dict]:
     return response.data or []
 
 
+def get_all_doc_names() -> List[str]:
+    """
+    Retrieves a list of all document filenames.
+
+    Returns:
+        List of strings (filenames)
+    """
+    supabase = get_supabase_client()
+
+    response = (
+        supabase.table("documents").select("filename").order("filename").execute()
+    )
+
+    if not response.data:
+        return []
+
+    return [doc["filename"] for doc in response.data]
+
+
 def get_document_by_id(document_id: UUID) -> Optional[dict]:
     """
     Gets a single document by ID.
@@ -146,10 +167,7 @@ def get_document_by_filename(filename: str) -> Optional[dict]:
     supabase = get_supabase_client()
 
     response = (
-        supabase.table("documents")
-        .select("*")
-        .eq("filename", filename)
-        .execute()
+        supabase.table("documents").select("*").eq("filename", filename).execute()
     )
 
     if response.data:
