@@ -1,7 +1,7 @@
 # 🚀 DatumLens RAG: Execution Plan
 
-**Current Phase:** `Phase 4: Frontend (Next.js) & State`
-**Status:** � Ready to Start
+**Current Phase:** `Phase 5: Polish & Final Features`
+**Status:** 🏗️ In Progress
 
 ---
 
@@ -53,7 +53,7 @@
 
 ---
 
-## 🎨 Фаза 4: Frontend (Next.js) & State
+## ✅ Фаза 4: Frontend (Next.js) & State
 
 **Цел:** Изграждане на клиентския интерфейс с модерни инструменти за управление на състоянието.
 
@@ -71,16 +71,28 @@
 
 **Цел:** Внедряване на ключовата функция за хайлайтване на цитати и добавяне на SaaS-готовност.
 
-| Статус | Стъпка   | Описание                             | Технологии                                                        |
-| :----: | :------- | :----------------------------------- | :---------------------------------------------------------------- |
-|   ✅   | **5.1**  | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                                    |
-|   ⬜   | **5.2**  | **Citation: PDF Viewer Integration** | `react-pdf`                                                       |
-|   ⬜   | **5.3**  | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                         |
-|   ⬜   | **5.4**  | **Security: Supabase Auth Setup**    | `Supabase Auth`                                                   |
-|   ⬜   | **5.5**  | **Security: Full-Stack Integration** | `Middleware`, `Guard Clauses`                                     |
-|   🔄   | **5.6**  | **Document Registry: Files Table**   | Таблица `documents` за списък с файлове + Supabase Storage bucket |
-|   ⬜   | **5.7**  | **UX: Document Management**          | UI за списък с файлове и бутон за изтриване (Delete & Replace).   |
-|   ⬜   | **5.8**  | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход.       |
-|   ⬜   | **5.9**  | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).         |
-|   ⬜   | **5.10** | **Feature: OCR Support**             | Tesseract OCR за scan-нати PDF файлове без text layer.            |
-|   ⬜   | **5.11** | **Final: Deployment Preparation**    | `Docker`, `Vercel`/`Render`                                       |
+| Статус | Стъпка  | Описание                             | Технологии                                                  |
+| :----: | :------ | :----------------------------------- | :---------------------------------------------------------- |
+|   ✅   | **5.1** | **Citation: Front-end Parsing**      | `Regex`, `String Manipulation`                              |
+|   ✅   | **5.2** | **Knowledge: Document Registry**     | Backend: SQL Table, Storage bucket, Fallback logic          |
+|   ✅   | **5.3** | **Knowledge: Management UI**         | Frontend: `/knowledge` page, CRUD operations                |
+|   ✅   | **5.4** | **Safety: Duplicate Prevention**     | Backend check for duplicate uploads                         |
+|   ⬜   | **5.5** | **Citation: PDF Viewer Integration** | `react-pdf`                                                 |
+|   ⬜   | **5.6** | **Citation: Highlighting Logic**     | `Text Offset Calculation`                                   |
+|   ⬜   | **5.7** | **Feature: Chat History**            | Запазване на чат историята в Supabase и зареждане при вход. |
+|   ⬜   | **5.8** | **Feature: Session Memory (Redis)**  | Upgrade на in-memory sessions към Redis с TTL (1-3 часа).   |
+
+---
+
+## 🔒 Фаза 6: Security Hardening & Deployment
+
+**Цел:** Осигуряване на сигурността на приложението чрез RLS, Auth и подготовка за продукция.
+
+| Статус | Стъпка  | Описание                              | Технологии                                      |
+| :----: | :------ | :------------------------------------ | :---------------------------------------------- |
+|   ⬜   | **6.1** | **Security: Supabase Auth**           | Настройка на Auth Providers (Email/Google)      |
+|   ⬜   | **6.2** | **Security: RLS Policies (DB)**       | Ограничаване на достъпа до данни по `user_id`   |
+|   ⬜   | **6.3** | **Security: Storage Policies**        | RLS за private bucket access (removing Public)  |
+|   ⬜   | **6.4** | **Security: Backend Auth Middleware** | Валидация на JWT токени във FastAPI             |
+|   ⬜   | **6.5** | **Deployment: Dockerization**         | `Dockerfile`, `docker-compose`                  |
+|   ⬜   | **6.6** | **Deployment: Production Build**      | `Vercel` (Frontend), `Render/Railway` (Backend) |

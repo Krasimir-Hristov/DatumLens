@@ -1,5 +1,23 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
+// Document interface matching backend response
+export interface Document {
+  id: string;
+  filename: string;
+  storage_path: string;
+  file_size: number;
+  page_count: number;
+  chunk_count: number;
+  uploaded_at: string;
+  user_id: string | null;
+}
+
+export interface DocumentListResponse {
+  success: boolean;
+  total_documents: number;
+  documents: Document[];
+}
+
 export class ApiError extends Error {
   constructor(public status: number, public message: string) {
     super(message);
@@ -33,6 +51,7 @@ export const api = {
       console.log('API: Response status', response.status);
       return handleResponse<{
         success: boolean;
+        document_id: string;
         filename: string;
         chunks_created: number;
       }>(response);
@@ -42,9 +61,38 @@ export const api = {
     }
   },
 
+  listDocuments: async () => {
+    const response = await fetch(`${API_BASE_URL}/documents/list`);
+    return handleResponse<DocumentListResponse>(response);
+  },
+
+  deleteDocumentById: async (documentId: string) => {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<{
+      success: boolean;
+      document_id: string;
+      filename: string;
+      chunks_deleted: number;
+      message: string;
+    }>(response);
+  },
+
+  getDocumentUrl: async (documentId: string) => {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/url`);
+    return handleResponse<{
+      success: boolean;
+      document_id: string;
+      filename: string;
+      url: string;
+    }>(response);
+  },
+
+  // Legacy: delete by filename (for backward compatibility)
   deleteDocument: async (filename: string) => {
     const response = await fetch(
-      `${API_BASE_URL}/documents/delete/${filename}`,
+      `${API_BASE_URL}/documents/by-name/${filename}`,
       {
         method: 'DELETE',
       }
@@ -52,14 +100,6 @@ export const api = {
     return handleResponse<{
       success: boolean;
       chunks_deleted: number;
-    }>(response);
-  },
-
-  listDocuments: async () => {
-    const response = await fetch(`${API_BASE_URL}/documents/list`);
-    return handleResponse<{
-      total_chunks: number;
-      chunks: any[];
     }>(response);
   },
 

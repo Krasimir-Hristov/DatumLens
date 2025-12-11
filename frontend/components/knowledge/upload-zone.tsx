@@ -8,6 +8,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Files,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -18,11 +19,13 @@ import { Progress } from '@/components/ui/progress';
 export function UploadZone() {
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [processingFile, setProcessingFile] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => api.uploadDocument(file),
-    onMutate: () => {
+    onMutate: (file) => {
+      setProcessingFile(file.name);
       setProgress(0);
       const interval = setInterval(() => {
         setProgress((prev) => {
@@ -38,27 +41,52 @@ export function UploadZone() {
     onSuccess: (data, variables, context: any) => {
       clearInterval(context.interval);
       setProgress(100);
-      toast.success('Document Processed Successfully', {
-        description: `${data.filename} has been indexed into ${data.chunks_created} semantic chunks.`,
-        duration: 5000,
+      toast.success('Document Processed', {
+        description: `${data.filename} indexed successfully (${data.chunks_created} chunks).`,
+        duration: 4000,
       });
       queryClient.invalidateQueries({ queryKey: ['documents'] });
-
-      setTimeout(() => {
-        uploadMutation.reset();
-        setProgress(0);
-      }, 2000);
     },
     onError: (error: any, variables, context: any) => {
       clearInterval(context.interval);
       setProgress(0);
-      toast.error('Upload Failed', {
-        description:
-          error.message || 'Please check your connection and try again.',
+      toast.error(`Failed: ${variables.name}`, {
+        description: error.message || 'Upload failed.',
         duration: 5000,
       });
     },
+    onSettled: () => {
+      setProcessingFile(null);
+      setProgress(0);
+    },
   });
+
+  const processFiles = async (files: File[]) => {
+    let processedCount = 0;
+
+    // Process files sequentially to avoid overwhelming the server
+    for (const file of files) {
+      if (file.type !== 'application/pdf') {
+        toast.error(`Skipped: ${file.name}`, {
+          description: 'Only PDF documents are supported.',
+        });
+        continue;
+      }
+
+      try {
+        await uploadMutation.mutateAsync(file);
+        processedCount++;
+      } catch (error) {
+        // Error is handled in onError, continue to next file
+      }
+    }
+
+    if (processedCount > 0) {
+      toast.info('Batch Upload Complete', {
+        description: `Processed ${processedCount} documents.`,
+      });
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -70,40 +98,26 @@ export function UploadZone() {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
 
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length === 0) return;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
 
-      const file = files[0];
-      if (file.type !== 'application/pdf') {
-        toast.error('Invalid File Type', {
-          description: 'Only PDF documents are supported.',
-        });
-        return;
-      }
-      uploadMutation.mutate(file);
-    },
-    [uploadMutation]
-  );
+    processFiles(files);
+  }, []);
 
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-        const file = e.target.files[0];
-        if (file.type !== 'application/pdf') {
-          toast.error('Invalid File Type', {
-            description: 'Only PDF documents are supported.',
-          });
-          return;
-        }
-        uploadMutation.mutate(file);
+      if (e.target.files && e.target.files.length > 0) {
+        const files = Array.from(e.target.files);
+        processFiles(files);
+        // Reset input so same files can be selected again if needed
+        e.target.value = '';
       }
     },
-    [uploadMutation]
+    []
   );
 
   return (
@@ -125,6 +139,7 @@ export function UploadZone() {
         type='file'
         className='hidden'
         accept='.pdf'
+        multiple
         onChange={handleFileSelect}
       />
 
@@ -141,10 +156,10 @@ export function UploadZone() {
 
             <div className='space-y-2'>
               <h3 className='text-xl font-semibold text-slate-900 dark:text-slate-100'>
-                Analyzing Document
+                Processing Documents
               </h3>
-              <p className='text-sm text-slate-500 dark:text-slate-400'>
-                AI is chunking content and generating vector embeddings...
+              <p className='text-sm text-slate-500 dark:text-slate-400 truncate max-w-[250px] mx-auto'>
+                {processingFile || 'Preparing upload...'}
               </p>
             </div>
 
@@ -154,7 +169,7 @@ export function UploadZone() {
                 className='h-2 w-full bg-slate-100 dark:bg-slate-800'
               />
               <div className='flex justify-between text-xs text-slate-400 font-mono'>
-                <span>PROCESSING</span>
+                <span>AI INDEXING</span>
                 <span>{progress}%</span>
               </div>
             </div>
@@ -169,7 +184,11 @@ export function UploadZone() {
                   : 'bg-slate-50 dark:bg-slate-900 text-slate-400 ring-slate-200 dark:ring-slate-800 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:ring-blue-100'
               )}
             >
-              <Upload className='h-12 w-12 stroke-[1.5]' />
+              {isDragging ? (
+                <Files className='h-12 w-12 stroke-[1.5]' />
+              ) : (
+                <Upload className='h-12 w-12 stroke-[1.5]' />
+              )}
             </div>
 
             <div className='space-y-3'>
@@ -177,7 +196,7 @@ export function UploadZone() {
                 Upload Knowledge Base
               </h3>
               <p className='text-base text-slate-500 dark:text-slate-400 max-w-[300px] mx-auto leading-relaxed'>
-                Drag & drop your PDF here to start the AI analysis.
+                Drag & drop PDFs here to bulk upload.
               </p>
             </div>
 
@@ -186,7 +205,10 @@ export function UploadZone() {
                 .PDF Supported
               </span>
               <span className='inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800'>
-                Max 10MB
+                No Size Limit
+              </span>
+              <span className='inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800'>
+                Bulk Upload
               </span>
             </div>
           </div>

@@ -1,5 +1,11 @@
 import Link from 'next/link';
-import { MessageSquare, Upload, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  MessageSquare,
+  Upload,
+  Sparkles,
+  ArrowRight,
+  Database,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
@@ -32,6 +38,12 @@ export default function Home() {
                 <Button variant='outline' size='sm'>
                   <Upload className='h-4 w-4 mr-2' />
                   Upload
+                </Button>
+              </Link>
+              <Link href='/knowledge'>
+                <Button variant='outline' size='sm'>
+                  <Database className='h-4 w-4 mr-2' />
+                  Knowledge
                 </Button>
               </Link>
               <Link href='/chat'>
