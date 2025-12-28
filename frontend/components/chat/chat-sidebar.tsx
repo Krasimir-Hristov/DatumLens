@@ -110,21 +110,19 @@ export function ChatSidebar({
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'
                   )}
                 >
-                  <MessageSquare className='h-4 w-4 shrink-0' />
-                  <span className='truncate flex-1 pr-6'>
-                    {chat.title || 'New Chat'}
-                  </span>
-
-                  {/* Delete Button (Visible on hover or active) */}
+                  {/* Delete Button (Left Side) */}
                   <button
                     onClick={(e) => handleDelete(e, chat.id)}
-                    className={cn(
-                      'absolute right-2 p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-700 opacity-0 group-hover:opacity-100 transition-opacity',
-                      currentChatId === chat.id && 'opacity-100'
-                    )}
+                    className='shrink-0 p-1.5 -ml-1 mr-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-700 opacity-60 hover:opacity-100 transition-all z-10'
+                    title='Delete Chat'
                   >
                     <Trash2 className='h-3.5 w-3.5' />
                   </button>
+
+                  <div className='flex items-center gap-2 min-w-0 flex-1'>
+                    {/* <MessageSquare className='h-4 w-4 shrink-0 opacity-50' /> */}
+                    <span className='truncate'>{chat.title || 'New Chat'}</span>
+                  </div>
                 </div>
               ))
             )}

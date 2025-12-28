@@ -33,7 +33,7 @@ export function ChatInterface({
     async function loadHistory() {
       if (chatId) {
         try {
-          // setLoading(true); // Don't show global loader, maybe just skeletal?
+          setLoading(true);
           const data = await api.getChatHistory(chatId);
           // Map backend messages to frontend format
           const formattedMessages = data.messages.map((msg) => ({
@@ -44,6 +44,9 @@ export function ChatInterface({
           setMessages(formattedMessages);
         } catch (error) {
           toast.error('Failed to load history');
+          setMessages([]);
+        } finally {
+          setLoading(false);
         }
       } else {
         clearMessages();
