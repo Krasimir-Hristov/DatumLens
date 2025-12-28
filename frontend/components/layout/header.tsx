@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   MessageSquare,
   Database,
@@ -18,11 +19,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { type User as SupabaseUser } from '@supabase/supabase-js';
+import { useChatStore } from '@/store/use-chat-store';
 
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
+  const queryClient = useQueryClient();
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [role, setRole] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export function Header() {
     // Listen for auth state changes (login/logout elsewhere)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         const { data } = await supabase
@@ -63,11 +66,16 @@ export function Header() {
         setRole(data?.role || null);
       } else {
         setRole(null);
+        // Clear React Query cache when user logs out via other tabs or expiration
+        if (event === 'SIGNED_OUT') {
+          useChatStore.getState().clearMessages();
+          queryClient.removeQueries();
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase, queryClient]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -75,6 +83,11 @@ export function Header() {
       toast.error('Error signing out');
       return;
     }
+
+    // Clear Client State
+    useChatStore.getState().clearMessages();
+    queryClient.removeQueries(); // Clear all cached data (chats, docs, etc.)
+
     toast.success('Signed out successfully');
     router.push('/login');
     router.refresh();
