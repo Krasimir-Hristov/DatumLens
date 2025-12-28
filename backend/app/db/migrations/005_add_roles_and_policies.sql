@@ -69,6 +69,10 @@ create policy "Allow delete access to admins" on document_chunks
   );
 
 -- 5. Update match_documents function to be global
+-- First drop all existing versions of the function to avoid overloading errors (300 Multiple Choices)
+drop function if exists match_documents(vector(1536), int);
+drop function if exists match_documents(vector(1536), int, jsonb);
+
 -- Remove the 'AND documents.user_id = auth.uid()' check
 create or replace function match_documents (
   query_embedding vector(1536),
