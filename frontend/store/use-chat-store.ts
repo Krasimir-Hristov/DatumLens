@@ -15,6 +15,7 @@ interface ChatState {
   // Действия (Actions) - какво можем да правим с дъската
   addMessage: (message: Message) => void;
   setLoading: (loading: boolean) => void;
+  setMessages: (messages: Message[]) => void;
   clearMessages: () => void;
 }
 
@@ -31,6 +32,9 @@ export const useChatStore = create<ChatState>((set) => ({
 
   // Функция за промяна на loading статуса
   setLoading: (loading) => set({ isLoading: loading }),
+
+  // Функция за задаване на целия списък (за зареждане на история)
+  setMessages: (messages) => set({ messages }),
 
   // Функция за изчистване на всичко
   clearMessages: () => set({ messages: [] }),

@@ -146,29 +146,46 @@ export const api = {
   },
 
   // Chat endpoints
-  askQuestion: async (question: string) => {
+  askQuestion: async (question: string, chatId?: string) => {
     const response = await authFetch(`${API_BASE_URL}/chat/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, chat_id: chatId }),
     });
     return handleResponse<{
+      chat_id: string;
       answer: string;
       sources_used: number;
       conversation_length: number;
     }>(response);
   },
 
-  clearConversation: async () => {
-    // With Auth, we don't need to pass userId in the URL usually,
-    // but the backend endpoint might still expect it.
-    // For now, let's assume the backend will read userId from token later.
-    // If backend requires ID in URL, we might need a workaround until backend is updated.
-    // We'll update the backend to clear 'me' instead of ID.
-    const response = await authFetch(`${API_BASE_URL}/chat/clear`, {
+  listChats: async () => {
+    const response = await authFetch(`${API_BASE_URL}/chat/list`);
+    return handleResponse<{
+      success: boolean;
+      chats: Array<{ id: string; title: string; created_at: string }>;
+    }>(response);
+  },
+
+  getChatHistory: async (chatId: string) => {
+    const response = await authFetch(`${API_BASE_URL}/chat/${chatId}/messages`);
+    return handleResponse<{
+      success: boolean;
+      messages: Array<{
+        id: string;
+        role: 'user' | 'assistant';
+        content: string;
+        created_at: string;
+      }>;
+    }>(response);
+  },
+
+  deleteChat: async (chatId: string) => {
+    const response = await authFetch(`${API_BASE_URL}/chat/${chatId}`, {
       method: 'DELETE',
     });
-    return handleResponse<{ message: string }>(response);
+    return handleResponse<{ success: boolean; message: string }>(response);
   },
 
   getStats: async () => {

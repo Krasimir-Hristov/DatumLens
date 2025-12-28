@@ -11,72 +11,95 @@ import { ChatInput } from './chat-input';
 import { Button } from '@/components/ui/button';
 import { type Citation } from '@/lib/citation-parser';
 
-export function ChatInterface() {
-  const { messages, isLoading, addMessage, setLoading, clearMessages } =
-    useChatStore();
+export function ChatInterface({
+  chatId,
+  onChatCreated,
+}: {
+  chatId: string | null;
+  onChatCreated: (id: string) => void;
+}) {
+  const {
+    messages,
+    isLoading,
+    addMessage,
+    setLoading,
+    setMessages,
+    clearMessages,
+  } = useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch documents map to resolve filenames to IDs for citations
+  // Load chat history when chatId changes
+  useEffect(() => {
+    async function loadHistory() {
+      if (chatId) {
+        try {
+          // setLoading(true); // Don't show global loader, maybe just skeletal?
+          const data = await api.getChatHistory(chatId);
+          // Map backend messages to frontend format
+          const formattedMessages = data.messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+            // Sources are not stored in simple message table yet, future improvement
+          }));
+          setMessages(formattedMessages);
+        } catch (error) {
+          toast.error('Failed to load history');
+        }
+      } else {
+        clearMessages();
+      }
+    }
+    loadHistory();
+  }, [chatId, setMessages, clearMessages]);
+
   const { data: documents } = useQuery({
     queryKey: ['documents'],
     queryFn: api.listDocuments,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Auto-scroll към дъното при ново съобщение
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleCitationClick = async (citation: Citation) => {
-    if (!documents) {
-      toast.error('Loading documents...', {
-        description: 'Please try again in a moment.',
-      });
-      return;
-    }
-
+    // ... same as before
+    if (!documents) return;
     const doc = documents.documents.find(
       (d: any) => d.filename === citation.filename
     );
-
     if (!doc) {
-      toast.error('Document not found', {
-        description: `Could not find "${citation.filename}" in your library.`,
-      });
+      toast.error('Document not found');
       return;
     }
-
     try {
-      const toastId = toast.loading('Opening document...');
       const { url } = await api.getDocumentUrl(doc.id);
-
-      // Open in new tab (PDF viewer) with page anchor
       const pageParam = citation.page ? `#page=${citation.page}` : '';
       window.open(`${url}${pageParam}`, '_blank');
-      toast.dismiss(toastId);
-    } catch (error: any) {
-      toast.error('Cannot open document', {
-        description: error.message || 'File may be missing or deleted.',
-      });
+    } catch (e) {
+      toast.error('Error opening document');
     }
   };
 
   const chatMutation = useMutation({
-    mutationFn: (question: string) => api.askQuestion(question),
+    mutationFn: (question: string) =>
+      api.askQuestion(question, chatId || undefined),
     onMutate: async (question) => {
-      // Optimistic update - показваме въпроса веднага
       addMessage({ role: 'user', content: question });
       setLoading(true);
     },
     onSuccess: (data) => {
-      // Добавяме отговора на AI
       addMessage({
         role: 'assistant',
         content: data.answer,
         sources: data.sources_used,
       });
       setLoading(false);
+
+      // If we didn't have a chatId before, we have one now
+      if (!chatId && data.chat_id) {
+        onChatCreated(data.chat_id);
+      }
     },
     onError: (error: any) => {
       setLoading(false);
@@ -90,14 +113,10 @@ export function ChatInterface() {
     chatMutation.mutate(question);
   };
 
-  const handleClear = () => {
-    clearMessages();
-    toast.success('Conversation cleared');
-  };
-
+  // ... rest of render ...
   return (
     <div className='flex flex-col h-full'>
-      {/* Header */}
+      {/* ... Header ... */}
       <div className='flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl'>
         <div className='flex items-center gap-2'>
           <div className='rounded-lg bg-linear-to-br from-violet-500 to-purple-600 p-2 text-white'>
@@ -107,25 +126,20 @@ export function ChatInterface() {
             <h2 className='text-lg font-semibold text-slate-900 dark:text-slate-100'>
               AI Assistant
             </h2>
-            <p className='text-xs text-slate-500 dark:text-slate-400'>
-              Ask anything about your documents
-            </p>
+            {chatId ? (
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
+                History Mode
+              </p>
+            ) : (
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
+                New Conversation
+              </p>
+            )}
           </div>
         </div>
-
-        {messages.length > 0 && (
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleClear}
-            className='text-slate-600 dark:text-slate-400'
-          >
-            Clear Chat
-          </Button>
-        )}
       </div>
 
-      {/* Messages Area */}
+      {/* ... Messages ... */}
       <div className='flex-1 overflow-y-auto'>
         {messages.length === 0 ? (
           <div className='flex flex-col items-center justify-center h-full p-8 text-center'>
@@ -136,28 +150,21 @@ export function ChatInterface() {
               Ready to Answer
             </h3>
             <p className='text-slate-500 dark:text-slate-400 max-w-md'>
-              Upload a document and ask questions about it. I'll provide precise
-              answers with citations.
+              Ask anything about your documents.
             </p>
-
             {/* Example Questions */}
             <div className='mt-8 space-y-2 w-full max-w-md'>
-              <p className='text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-3'>
-                Try asking:
-              </p>
-              {[
-                'What are the main points in this document?',
-                'Summarize the key findings',
-                'What does section 3 say about...?',
-              ].map((example, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSubmit(example)}
-                  className='w-full text-left p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors text-sm text-slate-600 dark:text-slate-400'
-                >
-                  {example}
-                </button>
-              ))}
+              {['What are the main points?', 'Summarize the documents'].map(
+                (example, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSubmit(example)}
+                    className='w-full text-left p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors text-sm text-slate-600 dark:text-slate-400'
+                  >
+                    {example}
+                  </button>
+                )
+              )}
             </div>
           </div>
         ) : (
@@ -171,46 +178,24 @@ export function ChatInterface() {
                 onCitationClick={handleCitationClick}
               />
             ))}
-
-            {/* Loading Indicator */}
             {isLoading && (
               <div className='flex gap-4 py-6 px-4 md:px-6 bg-slate-50 dark:bg-slate-900/50'>
-                <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-purple-600 text-white ring-1 ring-inset ring-violet-500/20'>
+                <div className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-purple-600 text-white'>
                   <MessageSquare className='h-5 w-5' />
                 </div>
-                <div className='flex items-center gap-2'>
-                  <div className='flex gap-1'>
-                    <div
-                      className='h-2 w-2 rounded-full bg-slate-400 animate-bounce'
-                      style={{ animationDelay: '0ms' }}
-                    />
-                    <div
-                      className='h-2 w-2 rounded-full bg-slate-400 animate-bounce'
-                      style={{ animationDelay: '150ms' }}
-                    />
-                    <div
-                      className='h-2 w-2 rounded-full bg-slate-400 animate-bounce'
-                      style={{ animationDelay: '300ms' }}
-                    />
-                  </div>
-                  <span className='text-sm text-slate-500 dark:text-slate-400'>
-                    AI is thinking...
-                  </span>
-                </div>
+                <span className='text-sm text-slate-500'>Thinking...</span>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
-      {/* Input Area */}
       <div className='p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'>
         <ChatInput
           onSubmit={handleSubmit}
           isLoading={isLoading}
-          disabled={messages.length === 0 && !chatMutation.isIdle}
+          disabled={false}
         />
       </div>
     </div>
