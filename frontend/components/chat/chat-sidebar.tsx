@@ -8,6 +8,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ChatSidebarProps {
   currentChatId: string | null;
@@ -21,6 +29,7 @@ export function ChatSidebar({
   onNewChat,
 }: ChatSidebarProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch chats
@@ -38,16 +47,22 @@ export function ChatSidebar({
       if (currentChatId === chatId) {
         onNewChat();
       }
+      setChatToDelete(null); // Close dialog
     },
     onError: () => {
       toast.error('Failed to delete chat');
+      setChatToDelete(null);
     },
   });
 
-  const handleDelete = (e: React.MouseEvent, chatId: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this chat?')) {
-      deleteMutation.mutate(chatId);
+    setChatToDelete(chatId);
+  };
+
+  const confirmDelete = () => {
+    if (chatToDelete) {
+      deleteMutation.mutate(chatToDelete);
     }
   };
 
@@ -110,9 +125,9 @@ export function ChatSidebar({
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900'
                   )}
                 >
-                  {/* Delete Button (Left Side) */}
+                  {/* Delete Button (Left Side) - Updated click handler */}
                   <button
-                    onClick={(e) => handleDelete(e, chat.id)}
+                    onClick={(e) => handleDeleteClick(e, chat.id)}
                     className='shrink-0 p-1.5 -ml-1 mr-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-200 dark:hover:bg-slate-700 opacity-60 hover:opacity-100 transition-all z-10'
                     title='Delete Chat'
                   >
@@ -137,6 +152,34 @@ export function ChatSidebar({
           onClick={() => setIsOpen(false)}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={!!chatToDelete}
+        onOpenChange={(open) => !open && setChatToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Chat?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the
+              chat history.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setChatToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant='destructive'
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
