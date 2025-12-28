@@ -16,7 +16,12 @@ import os
 from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse, Response
 from typing import Annotated
-from app.api.deps import CurrentUser, get_current_user_with_token
+from app.api.deps import (
+    CurrentUser,
+    get_current_user_with_token,
+    get_current_admin,
+    CurrentAdmin,
+)
 
 from app.services.document_processor import (
     load_pdf_from_bytes,
@@ -45,7 +50,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 
 @router.post("/upload")
 async def upload_document(
-    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+    user_with_token: CurrentAdmin,
     file: UploadFile = File(...),
 ):
     """
@@ -103,6 +108,7 @@ async def upload_document(
             )
 
         # Step 5: Create document record in database
+        logger.info(f"Step 5: Creating document record for {file.filename}")
         doc_record = create_document_record(
             filename=file.filename,
             storage_path=storage_path,
@@ -113,16 +119,24 @@ async def upload_document(
             access_token=access_token,
         )
         document_id = doc_record["id"]
-        logger.info(f"Document record created with ID: {document_id}")
+        logger.info(
+            f"Step 5: Completed. Document record created with ID: {document_id}"
+        )
 
         # Step 6: Chunk the documents using AI semantic chunking
+        logger.info(f"Step 6: Starting chunking for {file.filename}")
         chunks = chunk_documents(documents)
+        logger.info(f"Step 6: Completed. Created {len(chunks)} chunks")
 
         # Step 7: Create embeddings for all chunks
+        logger.info(
+            f"Step 7: Creating embeddings for {len(chunks)} chunks (OpenAI call)"
+        )
         chunks_with_embeddings = create_embeddings_for_chunks(chunks)
+        logger.info("Step 7: Completed. Embeddings received.")
 
         # Step 8: Save chunks to database with document_id reference
-        # Add document_id to each chunk's metadata
+        logger.info(f"Step 8: Saving {len(chunks_with_embeddings)} chunks to DB")
         for chunk in chunks_with_embeddings:
             chunk.metadata["document_id"] = document_id
 
@@ -130,9 +144,12 @@ async def upload_document(
             chunks_with_embeddings, document_id, access_token
         )
         chunk_count = result["chunks_saved"]
+        logger.info(f"Step 8: Completed. Saved {chunk_count} chunks.")
 
         # Step 9: Update document with chunk count
+        logger.info(f"Step 9: Updating chunk count for {document_id}")
         update_document_chunk_count(document_id, chunk_count, access_token)
+        logger.info("Step 9: Completed.")
 
         # Return success response
         return JSONResponse(
@@ -347,7 +364,7 @@ async def get_document_url(
 @router.delete("/{document_id}")
 async def delete_document(
     document_id: str,
-    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+    user_with_token: CurrentAdmin,
 ):
     """
     Delete a document and all its chunks.

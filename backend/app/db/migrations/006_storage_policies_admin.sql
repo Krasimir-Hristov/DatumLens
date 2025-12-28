@@ -5,6 +5,9 @@ drop policy if exists "Public Delete" on storage.objects;
 drop policy if exists "Users can upload their own documents" on storage.objects;
 drop policy if exists "Users can view their own documents" on storage.objects;
 drop policy if exists "Users can delete their own documents" on storage.objects;
+drop policy if exists "Allow public read access" on storage.objects;
+drop policy if exists "Allow admin upload access" on storage.objects;
+drop policy if exists "Allow admin delete access" on storage.objects;
 
 -- 2. Allow Read Access (Everyone can download/view files)
 create policy "Allow public read access"

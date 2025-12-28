@@ -130,8 +130,8 @@ def list_documents(
 
     query = supabase.table("documents").select("*").order("uploaded_at", desc=True)
 
-    if user_id:
-        query = query.eq("user_id", str(user_id))
+    # if user_id:
+    #     query = query.eq("user_id", str(user_id))
 
     response = query.execute()
 
