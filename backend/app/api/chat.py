@@ -19,6 +19,7 @@ from app.services.chat_service import (
     get_chat_history,
     add_message,
     delete_chat,
+    update_chat_title,
 )
 
 # Initialize router
@@ -87,6 +88,27 @@ async def delete_conversation(
     try:
         delete_chat(chat_id, access_token)
         return {"success": True, "message": "Chat deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class RenameChatRequest(BaseModel):
+    title: str
+
+
+@router.patch("/{chat_id}")
+async def rename_conversation(
+    chat_id: str,
+    request: RenameChatRequest,
+    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+):
+    """
+    Rename a conversation.
+    """
+    _, access_token = user_with_token
+    try:
+        updated_chat = update_chat_title(chat_id, request.title, access_token)
+        return {"success": True, "chat": updated_chat}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

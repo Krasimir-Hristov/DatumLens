@@ -89,3 +89,16 @@ def delete_chat(chat_id: str, access_token: str) -> bool:
 
     # Supabase user client might return data even on delete if RLS allows
     return True
+
+
+def update_chat_title(chat_id: str, title: str, access_token: str) -> Dict[str, Any]:
+    """
+    Updates the title of a chat.
+    """
+    supabase = get_user_supabase_client(access_token)
+    response = (
+        supabase.table("chats").update({"title": title}).eq("id", chat_id).execute()
+    )
+    if response.data:
+        return response.data[0]
+    raise Exception("Failed to update chat title")

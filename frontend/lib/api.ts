@@ -188,6 +188,18 @@ export const api = {
     return handleResponse<{ success: boolean; message: string }>(response);
   },
 
+  renameChat: async (chatId: string, title: string) => {
+    const response = await authFetch(`${API_BASE_URL}/chat/${chatId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
+    });
+    return handleResponse<{
+      success: boolean;
+      chat: { id: string; title: string };
+    }>(response);
+  },
+
   getStats: async () => {
     const response = await authFetch(`${API_BASE_URL}/chat/stats`);
     return handleResponse<any>(response);
