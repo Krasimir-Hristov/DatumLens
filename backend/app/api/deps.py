@@ -100,26 +100,32 @@ CurrentUserWithToken = Annotated[tuple[dict, str], Depends(get_current_user_with
 
 async def get_current_admin(
     user_with_token: CurrentUserWithToken,
-    supabase: Client = Depends(get_supabase_client),
 ) -> tuple[dict, str]:
     """
     Validates that the current user has the 'admin' role.
     Returns (user, token)
+    
+    Uses the user's JWT token to query profiles (respects RLS policies)
     """
     user, token = user_with_token
     user_id = user.id
     print(f"DEBUG: Starting admin check for user {user_id}")
 
-    # Check role in profiles table
+    # Create user-specific Supabase client using their JWT token
+    # This respects RLS policies and uses the user's permissions
+    from app.db.supabase import get_user_supabase_client
+    user_supabase = get_user_supabase_client(token)
+
+    # Check role in profiles table using user's client
     try:
         response = (
-            supabase.table("profiles")
+            user_supabase.table("profiles")
             .select("role")
             .eq("id", user_id)
             .single()
             .execute()
         )
-        print("DEBUG: Admin check DB response received")
+        print(f"DEBUG: Admin check DB response: {response.data}")
 
         if not response.data:
             raise HTTPException(
@@ -128,6 +134,8 @@ async def get_current_admin(
             )
 
         role = response.data.get("role")
+        print(f"DEBUG: User role: {role}")
+        
         if role != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
