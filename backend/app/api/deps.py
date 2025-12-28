@@ -69,7 +69,9 @@ async def get_current_user_with_token(
         )
 
     try:
+        print("DEBUG: Verifying user token...")
         user_response = supabase.auth.get_user(token)
+        print("DEBUG: User token verified.")
 
         if not user_response or not user_response.user:
             raise HTTPException(
@@ -106,6 +108,7 @@ async def get_current_admin(
     """
     user, token = user_with_token
     user_id = user.id
+    print(f"DEBUG: Starting admin check for user {user_id}")
 
     # Check role in profiles table
     try:
@@ -116,6 +119,7 @@ async def get_current_admin(
             .single()
             .execute()
         )
+        print("DEBUG: Admin check DB response received")
 
         if not response.data:
             raise HTTPException(

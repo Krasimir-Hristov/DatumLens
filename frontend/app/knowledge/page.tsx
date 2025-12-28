@@ -1,8 +1,58 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Database, Sparkles } from 'lucide-react';
 import { UploadZone, DocumentList } from '@/components/knowledge';
 import { Header } from '@/components/layout/header';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 export default function KnowledgePage() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.role !== 'admin') {
+        toast.error('Access denied. Admin privileges required.');
+        router.push('/chat');
+      } else {
+        setAuthorized(true);
+      }
+      setLoading(false);
+    };
+
+    checkRole();
+  }, [router, supabase]);
+
+  if (loading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600' />
+      </div>
+    );
+  }
+
+  if (!authorized) return null;
+
   return (
     <main className='relative min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950'>
       {/* Background Blobs */}

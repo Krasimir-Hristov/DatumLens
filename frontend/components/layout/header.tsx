@@ -25,6 +25,7 @@ export function Header() {
   const supabase = createClient();
 
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -34,6 +35,15 @@ export function Header() {
         data: { user },
       } = await supabase.auth.getUser();
       setUser(user);
+
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        setRole(data?.role || null);
+      }
       setLoading(false);
     };
 
@@ -42,8 +52,18 @@ export function Header() {
     // Listen for auth state changes (login/logout elsewhere)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        setRole(data?.role || null);
+      } else {
+        setRole(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -97,20 +117,22 @@ export function Header() {
           <div className='hidden md:flex items-center gap-6'>
             {user ? (
               <>
-                <Link href='/knowledge'>
-                  <Button
-                    variant={isActive('/knowledge') ? 'secondary' : 'ghost'}
-                    size='sm'
-                    className={
-                      isActive('/knowledge')
-                        ? 'bg-slate-100 dark:bg-slate-800'
-                        : ''
-                    }
-                  >
-                    <Database className='h-4 w-4 mr-2' />
-                    Knowledge
-                  </Button>
-                </Link>
+                {role === 'admin' && (
+                  <Link href='/knowledge'>
+                    <Button
+                      variant={isActive('/knowledge') ? 'secondary' : 'ghost'}
+                      size='sm'
+                      className={
+                        isActive('/knowledge')
+                          ? 'bg-slate-100 dark:bg-slate-800'
+                          : ''
+                      }
+                    >
+                      <Database className='h-4 w-4 mr-2' />
+                      Knowledge
+                    </Button>
+                  </Link>
+                )}
                 <Link href='/chat'>
                   <Button
                     variant={isActive('/chat') ? 'secondary' : 'ghost'}
@@ -190,15 +212,17 @@ export function Header() {
                   <User className='h-4 w-4 text-blue-500' />
                   Logged in as {username}
                 </div>
-                <Link
-                  href='/knowledge'
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Button variant='ghost' className='w-full justify-start'>
-                    <Database className='h-4 w-4 mr-2' />
-                    Knowledge Base
-                  </Button>
-                </Link>
+                {role === 'admin' && (
+                  <Link
+                    href='/knowledge'
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Button variant='ghost' className='w-full justify-start'>
+                      <Database className='h-4 w-4 mr-2' />
+                      Knowledge Base
+                    </Button>
+                  </Link>
+                )}
                 <Link href='/chat' onClick={() => setMobileMenuOpen(false)}>
                   <Button variant='ghost' className='w-full justify-start'>
                     <MessageSquare className='h-4 w-4 mr-2' />

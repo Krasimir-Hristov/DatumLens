@@ -177,7 +177,7 @@ async def upload_document(
 
 @router.get("/list")
 async def list_documents(
-    user_with_token: Annotated[tuple[dict, str], Depends(get_current_user_with_token)],
+    user_with_token: CurrentAdmin,
 ):
     """
     List all uploaded documents for the authenticated user.
