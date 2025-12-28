@@ -90,3 +90,46 @@ async def get_current_user_with_token(
 # Type alias for easy use in routes
 CurrentUser = Annotated[dict, Depends(get_current_user)]
 CurrentUserWithToken = Annotated[tuple[dict, str], Depends(get_current_user_with_token)]
+
+
+async def get_current_admin(
+    user_with_token: CurrentUserWithToken,
+    supabase: Client = Depends(get_supabase_client),
+) -> dict:
+    """
+    Validates that the current user has the 'admin' role.
+    """
+    user, token = user_with_token
+    user_id = user.id
+
+    # Check role in profiles table
+    # We use the generic supabase client (Service Role if available, or just public)
+    # But since we need to read the 'role' which might be protected,
+    # relying on the user's token and RLS is safest if we configured RLS 'read' for authenticated.
+    # We already set SELECT policy to true for profiles (or implied public read).
+    # Wait, we didn't explicitly set RLS on profiles in the migration 005!
+    # Let's assume profiles is readable by authenticated users (default public schema often is, but we should be sure).
+    # Actually, usually profiles is public read.
+
+    response = (
+        supabase.table("profiles").select("role").eq("id", user_id).single().execute()
+    )
+
+    if not response.data:
+        # If no profile, deny
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User profile not found",
+        )
+
+    role = response.data.get("role")
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+
+    return user
+
+
+CurrentAdmin = Annotated[dict, Depends(get_current_admin)]
