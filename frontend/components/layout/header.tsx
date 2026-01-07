@@ -79,7 +79,10 @@ export function Header() {
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) {
+
+    // Ignore "Auth session missing!" error as it means we're already logged out
+    if (error && error.message !== 'Auth session missing!') {
+      console.error('Logout error:', error);
       toast.error('Error signing out');
       return;
     }
