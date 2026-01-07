@@ -78,13 +78,11 @@ export function Header() {
   }, [supabase, queryClient]);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    // Ignore "Auth session missing!" error as it means we're already logged out
-    if (error && error.message !== 'Auth session missing!') {
-      console.error('Logout error:', error);
-      toast.error('Error signing out');
-      return;
+    // Attempt to sign out, ignoring errors (like session missing)
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error (ignored):', error);
     }
 
     // Clear Client State
@@ -92,8 +90,7 @@ export function Header() {
     queryClient.removeQueries(); // Clear all cached data (chats, docs, etc.)
 
     toast.success('Signed out successfully');
-    router.push('/login');
-    router.refresh();
+    router.replace('/login'); // Use replace to prevent going back
   };
 
   const username =
